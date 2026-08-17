@@ -1,0 +1,3519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d1728">
+
+    <title>HoangKun Store | Quản lý</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #1677ff;
+            --primary-dark: #0f5ed7;
+            --dark: #0d1728;
+            --dark-2: #101b2d;
+            --bg: #f3f6fc;
+            --card: #ffffff;
+            --text: #172033;
+            --muted: #8a96aa;
+            --border: #e7edf6;
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+            --sidebar: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        button,
+        input,
+        select {
+            font-family: inherit;
+            outline: none;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sidebar);
+            background: linear-gradient(
+                180deg,
+                #0c1627,
+                #101b2d
+            );
+            color: #fff;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 8px 0 30px rgba(10, 25, 50, .08);
+        }
+
+        .brand {
+            height: 76px;
+            padding: 0 25px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-size: 18px;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            background: linear-gradient(
+                135deg,
+                #1677ff,
+                #5b9cff
+            );
+            display: grid;
+            place-items: center;
+            box-shadow: 0 8px 20px rgba(22,119,255,.3);
+        }
+
+        .brand small {
+            display: block;
+            font-size: 8px;
+            color: #71819a;
+            margin-top: 2px;
+            letter-spacing: .8px;
+        }
+
+        .sidebar-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .sb-title {
+            padding: 15px 22px 8px;
+            color: #60708b;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sb-mi {
+            position: relative;
+            width: calc(100% - 20px);
+            margin: 0 10px 4px;
+            min-height: 43px;
+            padding: 0 15px;
+            border-radius: 9px;
+            background: transparent;
+            color: #b9c4d6;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: left;
+            transition: .2s;
+        }
+
+        .sb-mi:hover {
+            background: #17253b;
+            color: #fff;
+            transform: translateX(2px);
+        }
+
+        .sb-mi.active {
+            background: linear-gradient(
+                90deg,
+                #193e72,
+                #18365f
+            );
+            color: #fff;
+            box-shadow: inset 3px 0 #1681ff;
+        }
+
+        .sb-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .sb-badge {
+            margin-left: auto;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 6px;
+            display: grid;
+            place-items: center;
+            background: #ef4444;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        .sidebar-footer {
+            padding: 10px 0;
+            border-top: 1px solid rgba(255,255,255,.05);
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .main {
+            margin-left: var(--sidebar);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 76px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1500;
+        }
+
+        .top-left,
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .crumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #99a4b7;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .crumb i {
+            font-size: 10px;
+            color: #c4ccda;
+        }
+
+        .crumb .current {
+            color: #172033;
+            font-weight: 800;
+        }
+
+        .search {
+            width: 290px;
+            height: 42px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 12px;
+            color: #9aa6b8;
+            background: #fff;
+        }
+
+        .search input {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            font-size: 12px;
+        }
+
+        .shortcut {
+            font-size: 9px;
+            color: #9aa6b8;
+            background: #f5f7fb;
+            border: 1px solid #e8edf5;
+            border-radius: 5px;
+            padding: 3px 6px;
+            white-space: nowrap;
+        }
+
+        .icon-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 50%;
+            color: #526074;
+            font-size: 14px;
+            transition: .2s;
+        }
+
+        .icon-btn:hover {
+            color: var(--primary);
+            border-color: #c8ddff;
+            background: #f5f9ff;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ef4444;
+            border: 2px solid #fff;
+        }
+
+        /* USER */
+
+        .user-dropdown {
+            position: relative;
+        }
+
+        .user {
+            height: 44px;
+            padding: 4px 10px 4px 4px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(
+                135deg,
+                #d9edff,
+                #b8dcff
+            );
+            color: #1677ff;
+            font-weight: 800;
+        }
+
+        .user-name {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .user i {
+            font-size: 9px;
+            color: #9ba6b8;
+        }
+
+        .user-menu {
+            position: absolute;
+            right: 0;
+            top: 52px;
+            width: 235px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 8px;
+            box-shadow: 0 15px 40px rgba(20,40,80,.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: .2s;
+            z-index: 3000;
+        }
+
+        .user-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-menu-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+        }
+
+        .user-menu-header strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .user-menu-header span {
+            font-size: 10px;
+            color: #94a0b2;
+        }
+
+        .user-menu-line {
+            height: 1px;
+            background: #edf1f6;
+            margin: 5px 0;
+        }
+
+        .user-menu button {
+            width: 100%;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 10px;
+            background: transparent;
+            border-radius: 9px;
+            color: #526074;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: left;
+        }
+
+        .user-menu button:hover {
+            background: #eef6ff;
+            color: var(--primary);
+        }
+
+        .logout-item {
+            color: #ef4444 !important;
+        }
+
+        /* =========================
+           CONTENT
+        ========================= */
+
+        .content {
+            padding: 30px;
+            max-width: 1500px;
+            margin: auto;
+        }
+
+        .page-title {
+            margin-bottom: 22px;
+        }
+
+        .page-title h1 {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .page-title p {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* =========================
+           DASHBOARD CARDS
+        ========================= */
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 17px;
+            padding: 20px;
+            box-shadow: 0 7px 25px rgba(31,51,73,.04);
+            transition: .25s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(31,51,73,.08);
+        }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+        }
+
+        .blue {
+            background: #eef5ff;
+            color: #1677ff;
+        }
+
+        .green {
+            background: #eafaf5;
+            color: #10b981;
+        }
+
+        .yellow {
+            background: #fff8e8;
+            color: #f59e0b;
+        }
+
+        .purple {
+            background: #f3efff;
+            color: #8b5cf6;
+        }
+
+        .stat-label {
+            margin-top: 15px;
+            color: #8a96aa;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            margin-top: 4px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .stat-desc {
+            margin-top: 4px;
+            color: #a1aabd;
+            font-size: 9px;
+        }
+
+        /* =========================
+           LAYOUT
+        ========================= */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.35fr .65fr;
+            gap: 18px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 7px 25px rgba(31,51,73,.04);
+        }
+
+        .card-head {
+            min-height: 64px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #edf1f6;
+        }
+
+        .card-head h2 {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .card-head p {
+            margin-top: 2px;
+            color: #9aa6b8;
+            font-size: 9px;
+        }
+
+        .card-head button {
+            background: #eef5ff;
+            color: #1677ff;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        /* =========================
+           ORDER
+        ========================= */
+
+        .order-list {
+            padding: 5px 20px 10px;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        .order-item:last-child {
+            border-bottom: 0;
+        }
+
+        .order-icon {
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            background: #f1f6ff;
+            color: #1677ff;
+        }
+
+        .order-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .order-info strong {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .order-info span {
+            display: block;
+            margin-top: 3px;
+            color: #99a4b7;
+            font-size: 9px;
+        }
+
+        .order-price {
+            text-align: right;
+        }
+
+        .order-price strong {
+            display: block;
+            color: #1677ff;
+            font-size: 11px;
+        }
+
+        .order-price span {
+            display: block;
+            margin-top: 4px;
+            color: #99a4b7;
+            font-size: 8px;
+        }
+
+        .status {
+            padding: 5px 8px;
+            border-radius: 7px;
+            font-size: 8px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .status.new {
+            background: #fff4df;
+            color: #d97706;
+        }
+
+        .status.processing {
+            background: #eef5ff;
+            color: #1677ff;
+        }
+
+        .status.done {
+            background: #eafaf5;
+            color: #059669;
+        }
+
+        .status.cancel {
+            background: #fff0f0;
+            color: #dc2626;
+        }
+
+        /* =========================
+           NOTIFICATION
+        ========================= */
+
+        .notification-list {
+            padding: 8px 20px;
+        }
+
+        .notification {
+            display: flex;
+            gap: 11px;
+            padding: 13px 0;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        .notification:last-child {
+            border-bottom: 0;
+        }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-content strong {
+            font-size: 10px;
+            display: block;
+        }
+
+        .notification-content p {
+            margin-top: 3px;
+            color: #8995a9;
+            font-size: 9px;
+            line-height: 1.5;
+        }
+
+        .notification-time {
+            margin-top: 4px;
+            color: #b0b8c6;
+            font-size: 8px;
+        }
+
+        /* =========================
+           MANAGEMENT
+        ========================= */
+
+        .section {
+            margin-top: 20px;
+        }
+
+        .management-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .balance-box {
+            padding: 20px;
+        }
+
+        .balance-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #edf1f6;
+        }
+
+        .balance-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(
+                135deg,
+                #d9edff,
+                #b8dcff
+            );
+            display: grid;
+            place-items: center;
+            color: #1677ff;
+            font-weight: 800;
+        }
+
+        .balance-user strong {
+            display: block;
+            font-size: 12px;
+        }
+
+        .balance-user span {
+            display: block;
+            margin-top: 3px;
+            color: #9aa6b8;
+            font-size: 9px;
+        }
+
+        .balance-number {
+            padding: 18px 0;
+        }
+
+        .balance-number span {
+            color: #99a4b7;
+            font-size: 10px;
+        }
+
+        .balance-number strong {
+            display: block;
+            margin-top: 3px;
+            color: #1677ff;
+            font-size: 27px;
+        }
+
+        .balance-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+        }
+
+        .balance-actions button {
+            height: 39px;
+            border-radius: 9px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .add-btn {
+            background: #eafaf5;
+            color: #059669;
+        }
+
+        .minus-btn {
+            background: #fff0f0;
+            color: #dc2626;
+        }
+
+        /* =========================
+           TABLE
+        ========================= */
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 13px 20px;
+            text-align: left;
+            border-bottom: 1px solid #f0f3f7;
+            white-space: nowrap;
+        }
+
+        th {
+            color: #8b97aa;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        td {
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .customer {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .customer-avatar {
+            width: 31px;
+            height: 31px;
+            border-radius: 50%;
+            background: #eef5ff;
+            color: #1677ff;
+            display: grid;
+            place-items: center;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .customer-name strong {
+            display: block;
+            font-size: 10px;
+        }
+
+        .customer-name span {
+            display: block;
+            margin-top: 2px;
+            color: #a0aabc;
+            font-size: 8px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .table-actions button {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: #f3f6fb;
+            color: #68758a;
+        }
+
+        .table-actions button:hover {
+            background: #eef5ff;
+            color: #1677ff;
+        }
+
+        /* =========================
+           MODAL
+        ========================= */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(10,20,35,.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 5000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-box {
+            width: 100%;
+            max-width: 430px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 25px 70px rgba(0,0,0,.2);
+            overflow: hidden;
+            animation: modalIn .25s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-head {
+            padding: 20px;
+            border-bottom: 1px solid #edf1f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-head h3 {
+            font-size: 15px;
+        }
+
+        .close-modal {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #f3f6fb;
+            color: #69758a;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #667389;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            height: 42px;
+            border: 1px solid #e3e9f2;
+            border-radius: 10px;
+            padding: 0 12px;
+            background: #fff;
+            font-size: 11px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #8bbcff;
+            box-shadow: 0 0 0 3px rgba(22,119,255,.08);
+        }
+
+        .modal-submit {
+            width: 100%;
+            height: 42px;
+            border-radius: 10px;
+            background: #1677ff;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        /* =========================
+           TOAST
+        ========================= */
+
+        .toast-container {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 9000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 290px;
+            padding: 14px 15px;
+            border-radius: 13px;
+            background: #fff;
+            border: 1px solid var(--border);
+            box-shadow: 0 15px 40px rgba(20,40,80,.15);
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            animation: toastIn .3s ease;
+        }
+
+        .toast-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: #eafaf5;
+            color: #059669;
+            display: grid;
+            place-items: center;
+        }
+
+        .toast strong {
+            display: block;
+            font-size: 10px;
+        }
+
+        .toast span {
+            display: block;
+            margin-top: 3px;
+            color: #8a96aa;
+            font-size: 9px;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        .mobile-menu {
+            display: none;
+        }
+
+        @media(max-width:1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2,1fr);
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .management-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width:760px) {
+            :root {
+                --sidebar: 0px;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: .25s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .mobile-menu {
+                display: grid;
+                place-items: center;
+                width: 39px;
+                height: 39px;
+                border-radius: 10px;
+                background: #eef5ff;
+                color: #1677ff;
+            }
+
+            .crumb {
+                display: none;
+            }
+
+            .search {
+                width: 190px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .page-title h1 {
+                font-size: 23px;
+            }
+
+            .user-name {
+                display: none;
+            }
+        }
+
+        @media(max-width:560px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 14px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .search {
+                display: none;
+            }
+
+            .top-right {
+                gap: 7px;
+            }
+
+            .icon-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .order-item {
+                align-items: flex-start;
+            }
+
+            .order-price {
+                display: none;
+            }
+
+            .status {
+                margin-left: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- =========================
+     SIDEBAR
+========================= -->
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            <i class="fa-solid fa-bolt"></i>
+        </div>
+
+        <div>
+            HOANGKUN
+            <small>STORE MANAGEMENT</small>
+        </div>
+
+    </div>
+
+    <div class="sidebar-scroll">
+
+        <div class="sb-title">Tổng quan</div>
+
+        <button class="sb-mi active" onclick="showSection('dashboard', this)">
+            <span class="sb-icon">
+                <i class="fa-solid fa-chart-pie"></i>
+            </span>
+            Dashboard
+        </button>
+
+        <button class="sb-mi" onclick="showSection('orders', this)">
+            <span class="sb-icon">
+                <i class="fa-solid fa-box"></i>
+            </span>
+            Đơn hàng
+            <span class="sb-badge" id="orderBadge">3</span>
+        </button>
+
+        <button class="sb-mi" onclick="showSection('notifications', this)">
+            <span class="sb-icon">
+                <i class="fa-regular fa-bell"></i>
+            </span>
+            Thông báo
+        </button>
+
+        <div class="sb-title">Khách hàng</div>
+
+        <button class="sb-mi" onclick="showSection('coins', this)">
+            <span class="sb-icon">
+                <i class="fa-solid fa-coins"></i>
+            </span>
+            Quản lý xu
+        </button>
+
+        <button class="sb-mi" onclick="showSection('customers', this)">
+            <span class="sb-icon">
+                <i class="fa-solid fa-users"></i>
+            </span>
+            Tài khoản khách
+        </button>
+
+        <div class="sb-title">Hệ thống</div>
+
+        <button class="sb-mi" onclick="showSection('security', this)">
+            <span class="sb-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </span>
+            Bảo mật tài khoản
+        </button>
+
+        <button class="sb-mi" onclick="showToast('Khu vực cài đặt đang được phát triển')">
+            <span class="sb-icon">
+                <i class="fa-solid fa-gear"></i>
+            </span>
+            Cài đặt
+        </button>
+
+    </div>
+
+    <div class="sidebar-footer">
+
+        <button class="sb-mi"
+                onclick="logout()"
+                style="color:#ff6670">
+
+            <span class="sb-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </span>
+
+            Đăng xuất
+
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- =========================
+     MAIN
+========================= -->
+
+<main class="main">
+
+    <header class="topbar">
+
+        <div class="top-left">
+
+            <button class="mobile-menu"
+                    onclick="toggleSidebar()">
+
+                <i class="fa-solid fa-bars"></i>
+
+            </button>
+
+            <div class="crumb">
+
+                <span>HoangKun Store</span>
+
+                <i class="fa-solid fa-chevron-right"></i>
+
+                <span class="current"
+                      id="breadcrumb">
+
+                    Dashboard
+
+                </span>
+
+            </div>
+
+            <div class="search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="text"
+                    id="globalSearch"
+                    placeholder="Tìm đơn hàng, khách hàng...">
+
+                <span class="shortcut">
+                    Ctrl K
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="top-right">
+
+            <button class="icon-btn"
+                    onclick="showSection('notifications')">
+
+                <i class="fa-regular fa-bell"></i>
+
+                <span class="notification-dot"
+                      id="notificationDot"></span>
+
+            </button>
+
+
+            <div class="user-dropdown">
+
+                <button class="user"
+                        id="userBtn">
+
+                    <div class="avatar">
+                        H
+                    </div>
+
+                    <span class="user-name">
+                        HoangKun Admin
+                    </span>
+
+                    <i class="fa-solid fa-chevron-down"></i>
+
+                </button>
+
+
+                <div class="user-menu"
+                     id="userMenu">
+
+                    <div class="user-menu-header">
+
+                        <div class="avatar">
+                            H
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                HoangKun Admin
+                            </strong>
+
+                            <span>
+                                Quản trị viên
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="user-menu-line"></div>
+
+                    <button onclick="showToast('Thông tin quản trị viên')">
+                        <i class="fa-regular fa-user"></i>
+                        Hồ sơ quản trị
+                    </button>
+
+                    <button onclick="showToast('Cài đặt hệ thống')">
+                        <i class="fa-solid fa-gear"></i>
+                        Cài đặt
+                    </button>
+
+                    <div class="user-menu-line"></div>
+
+                    <button class="logout-item"
+                            onclick="logout()">
+
+                        <i class="fa-solid fa-right-from-bracket"></i>
+
+                        Đăng xuất
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <div class="content">
+
+        <!-- =========================
+             DASHBOARD
+        ========================= -->
+
+        <section id="dashboard" class="page-section">
+
+            <div class="page-title">
+
+                <h1>
+                    Tổng quan hệ thống
+                </h1>
+
+                <p>
+                    Theo dõi đơn hàng, xu và tài khoản khách hàng.
+                </p>
+
+            </div>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <div class="stat-icon blue">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+
+                        <i class="fa-solid fa-arrow-trend-up"
+                           style="color:#10b981;font-size:12px">
+                        </i>
+
+                    </div>
+
+                    <div class="stat-label">
+                        Tổng đơn hàng
+                    </div>
+
+                    <div class="stat-value"
+                         id="totalOrders">
+                        128
+                    </div>
+
+                    <div class="stat-desc">
+                        +12 đơn trong hôm nay
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <div class="stat-icon green">
+                            <i class="fa-solid fa-coins"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="stat-label">
+                        Tổng xu hệ thống
+                    </div>
+
+                    <div class="stat-value"
+                         id="totalCoins">
+                        85.240
+                    </div>
+
+                    <div class="stat-desc">
+                        Xu đang lưu hành
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <div class="stat-icon yellow">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="stat-label">
+                        Khách hàng
+                    </div>
+
+                    <div class="stat-value"
+                         id="totalCustomers">
+                        248
+                    </div>
+
+                    <div class="stat-desc">
+                        16 khách mới hôm nay
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+
+                        <div class="stat-icon purple">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+
+                    </div>
+
+                    <div class="stat-label">
+                        Đơn đang xử lý
+                    </div>
+
+                    <div class="stat-value"
+                         id="processingOrders">
+                        17
+                    </div>
+
+                    <div class="stat-desc">
+                        Cần được xử lý
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="dashboard-grid">
+
+                <!-- ORDERS -->
+
+                <div class="card">
+
+                    <div class="card-head">
+
+                        <div>
+
+                            <h2>
+                                🔔 Đơn hàng mới
+                            </h2>
+
+                            <p>
+                                Các đơn hàng khách vừa gửi
+                            </p>
+
+                        </div>
+
+                        <button onclick="showSection('orders')">
+                            Xem tất cả
+                        </button>
+
+                    </div>
+
+
+                    <div class="order-list"
+                         id="recentOrders">
+
+                    </div>
+
+                </div>
+
+
+                <!-- NOTIFICATIONS -->
+
+                <div class="card">
+
+                    <div class="card-head">
+
+                        <div>
+
+                            <h2>
+                                Thông báo
+                            </h2>
+
+                            <p>
+                                Hoạt động mới nhất
+                            </p>
+
+                        </div>
+
+                        <button onclick="markNotificationsRead()">
+                            Đã đọc
+                        </button>
+
+                    </div>
+
+
+                    <div class="notification-list"
+                         id="notificationList">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- COINS -->
+
+            <div class="section">
+
+                <div class="management-grid">
+
+                    <div class="card">
+
+                        <div class="card-head">
+
+                            <div>
+
+                                <h2>
+                                    🪙 Quản lý xu nhanh
+                                </h2>
+
+                                <p>
+                                    Cộng hoặc trừ xu cho khách
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="balance-box">
+
+                            <div class="balance-user">
+
+                                <div class="balance-avatar">
+                                    H
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        Hoangny2006
+                                    </strong>
+
+                                    <span>
+                                        Khách hàng
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="balance-number">
+
+                                <span>
+                                    Số dư hiện tại
+                                </span>
+
+                                <strong id="demoBalance">
+                                    1.250 xu
+                                </strong>
+
+                            </div>
+
+
+                            <div class="balance-actions">
+
+                                <button class="add-btn"
+                                        onclick="openCoinModal('add')">
+
+                                    <i class="fa-solid fa-plus"></i>
+
+                                    Cộng xu
+
+                                </button>
+
+
+                                <button class="minus-btn"
+                                        onclick="openCoinModal('minus')">
+
+                                    <i class="fa-solid fa-minus"></i>
+
+                                    Trừ xu
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="card">
+
+                        <div class="card-head">
+
+                            <div>
+
+                                <h2>
+                                    🔐 Trạng thái hệ thống
+                                </h2>
+
+                                <p>
+                                    Kiểm tra nhanh
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="balance-box">
+
+                            <div class="notification">
+
+                                <div class="notification-icon green">
+                                    <i class="fa-solid fa-database"></i>
+                                </div>
+
+                                <div class="notification-content">
+
+                                    <strong>
+                                        Database
+                                    </strong>
+
+                                    <p>
+                                        Đang chờ kết nối database thật.
+                                    </p>
+
+                                    <div class="notification-time">
+                                        DEMO MODE
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="notification">
+
+                                <div class="notification-icon blue">
+                                    <i class="fa-solid fa-bolt"></i>
+                                </div>
+
+                                <div class="notification-content">
+
+                                    <strong>
+                                        Realtime
+                                    </strong>
+
+                                    <p>
+                                        Sẵn cấu trúc để nhận đơn realtime.
+                                    </p>
+
+                                    <div class="notification-time">
+                                        READY
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="notification">
+
+                                <div class="notification-icon green">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+
+                                <div class="notification-content">
+
+                                    <strong>
+                                        Bảo mật
+                                    </strong>
+
+                                    <p>
+                                        Không hiển thị mật khẩu plaintext.
+                                    </p>
+
+                                    <div class="notification-time">
+                                        SAFE
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             ORDERS
+        ========================= -->
+
+        <section id="orders"
+                 class="page-section"
+                 style="display:none">
+
+            <div class="page-title">
+
+                <h1>
+                    Quản lý đơn hàng
+                </h1>
+
+                <p>
+                    Theo dõi và cập nhật trạng thái đơn hàng.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-head">
+
+                    <div>
+
+                        <h2>
+                            Tất cả đơn hàng
+                        </h2>
+
+                        <p>
+                            Danh sách đơn từ khách hàng
+                        </p>
+
+                    </div>
+
+                    <button onclick="simulateOrder()">
+                        + Tạo đơn demo
+                    </button>
+
+                </div>
+
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Dịch vụ</th>
+                                <th>Số lượng</th>
+                                <th>Xu</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="orderTable">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             NOTIFICATIONS
+        ========================= -->
+
+        <section id="notifications"
+                 class="page-section"
+                 style="display:none">
+
+            <div class="page-title">
+
+                <h1>
+                    Thông báo
+                </h1>
+
+                <p>
+                    Toàn bộ thông báo hoạt động của hệ thống.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-head">
+
+                    <div>
+
+                        <h2>
+                            Trung tâm thông báo
+                        </h2>
+
+                        <p>
+                            Thông báo đơn hàng và tài khoản
+                        </p>
+
+                    </div>
+
+                    <button onclick="markNotificationsRead()">
+                        Đánh dấu đã đọc
+                    </button>
+
+                </div>
+
+
+                <div class="notification-list"
+                     id="fullNotificationList">
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             COINS
+        ========================= -->
+
+        <section id="coins"
+                 class="page-section"
+                 style="display:none">
+
+            <div class="page-title">
+
+                <h1>
+                    Quản lý xu
+                </h1>
+
+                <p>
+                    Cộng, trừ và theo dõi biến động xu của khách.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-head">
+
+                    <div>
+
+                        <h2>
+                            Ví khách hàng
+                        </h2>
+
+                        <p>
+                            Quản lý số dư xu
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Khách hàng</th>
+                                <th>Số xu</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="coinTable">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             CUSTOMERS
+        ========================= -->
+
+        <section id="customers"
+                 class="page-section"
+                 style="display:none">
+
+            <div class="page-title">
+
+                <h1>
+                    Tài khoản khách hàng
+                </h1>
+
+                <p>
+                    Kiểm soát trạng thái tài khoản và hoạt động.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-head">
+
+                    <div>
+
+                        <h2>
+                            Danh sách khách
+                        </h2>
+
+                        <p>
+                            Tài khoản đang sử dụng hệ thống
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Khách hàng</th>
+                                <th>Xu</th>
+                                <th>Đăng nhập cuối</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="customerTable">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             SECURITY
+        ========================= -->
+
+        <section id="security"
+                 class="page-section"
+                 style="display:none">
+
+            <div class="page-title">
+
+                <h1>
+                    Bảo mật tài khoản
+                </h1>
+
+                <p>
+                    Kiểm soát trạng thái và quyền truy cập tài khoản.
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-head">
+
+                    <div>
+
+                        <h2>
+                            Quản lý bảo mật
+                        </h2>
+
+                        <p>
+                            Không hiển thị mật khẩu thật của khách.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Tài khoản</th>
+                                <th>Trạng thái</th>
+                                <th>Lần đăng nhập</th>
+                                <th>Bảo mật</th>
+                                <th>Thao tác</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+
+                                <td>
+                                    <div class="customer">
+
+                                        <div class="customer-avatar">
+                                            H
+                                        </div>
+
+                                        <div class="customer-name">
+
+                                            <strong>
+                                                Hoangny2006
+                                            </strong>
+
+                                            <span>
+                                                ID: HK001
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="status done">
+                                        Hoạt động
+                                    </span>
+                                </td>
+
+                                <td>
+                                    Hôm nay, 14:32
+                                </td>
+
+                                <td>
+                                    <span class="status done">
+                                        An toàn
+                                    </span>
+                                </td>
+
+                                <td>
+
+                                    <div class="table-actions">
+
+                                        <button
+                                            onclick="showToast('Mở trang quản lý tài khoản')">
+
+                                            <i class="fa-solid fa-user-gear"></i>
+
+                                        </button>
+
+                                        <button
+                                            onclick="showToast('Đã gửi yêu cầu reset mật khẩu')">
+
+                                            <i class="fa-solid fa-key"></i>
+
+                                        </button>
+
+                                        <button
+                                            onclick="showToast('Đã khóa/mở khóa tài khoản demo')">
+
+                                            <i class="fa-solid fa-lock"></i>
+
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<!-- =========================
+     COIN MODAL
+========================= -->
+
+<div class="modal"
+     id="coinModal">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h3 id="coinModalTitle">
+                Cộng xu
+            </h3>
+
+            <button class="close-modal"
+                    onclick="closeCoinModal()">
+
+                <i class="fa-solid fa-xmark"></i>
+
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <div class="form-group">
+
+                <label>
+                    Tài khoản
+                </label>
+
+                <select id="coinUser">
+
+                    <option>
+                        Hoangny2006
+                    </option>
+
+                    <option>
+                        Khách hàng demo
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Số xu
+                </label>
+
+                <input
+                    type="number"
+                    id="coinAmount"
+                    min="1"
+                    placeholder="Nhập số xu">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Lý do
+                </label>
+
+                <input
+                    type="text"
+                    id="coinReason"
+                    placeholder="Ví dụ: Khuyến mãi, hoàn đơn...">
+
+            </div>
+
+
+            <button class="modal-submit"
+                    onclick="submitCoin()">
+
+                Xác nhận
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div class="toast-container"
+     id="toastContainer">
+</div>
+
+
+<script>
+
+/* =====================================================
+   DEMO DATA
+   SAU NÀY THAY BẰNG FIREBASE / BACKEND
+===================================================== */
+
+let orders = [
+    {
+        id: "HK-00128",
+        user: "Hoangny2006",
+        service: "Instagram - Tăng Like",
+        quantity: "1.000",
+        coins: 500,
+        status: "new",
+        time: "Vừa xong"
+    },
+    {
+        id: "HK-00127",
+        user: "NguyenAnh",
+        service: "Facebook - Tăng Follow",
+        quantity: "2.000",
+        coins: 900,
+        status: "processing",
+        time: "5 phút trước"
+    },
+    {
+        id: "HK-00126",
+        user: "MinhKhang",
+        service: "Instagram - Tăng Follow",
+        quantity: "500",
+        coins: 650,
+        status: "done",
+        time: "18 phút trước"
+    }
+];
+
+
+let customers = [
+    {
+        name: "Hoangny2006",
+        id: "HK001",
+        coins: 1250,
+        lastLogin: "Hôm nay, 14:32",
+        status: "Hoạt động"
+    },
+    {
+        name: "NguyenAnh",
+        id: "HK002",
+        coins: 3200,
+        lastLogin: "Hôm nay, 13:21",
+        status: "Hoạt động"
+    },
+    {
+        name: "MinhKhang",
+        id: "HK003",
+        coins: 850,
+        lastLogin: "Hôm qua, 22:10",
+        status: "Hoạt động"
+    },
+    {
+        name: "DemoUser",
+        id: "HK004",
+        coins: 450,
+        lastLogin: "2 ngày trước",
+        status: "Đã khóa"
+    }
+];
+
+
+let notifications = [
+    {
+        type: "order",
+        title: "Đơn hàng mới",
+        text: "Hoangny2006 vừa đặt đơn Instagram - Tăng Like.",
+        time: "Vừa xong",
+        read: false
+    },
+    {
+        type: "coin",
+        title: "Giao dịch xu",
+        text: "Khách Hoangny2006 đang có 1.250 xu.",
+        time: "3 phút trước",
+        read: false
+    },
+    {
+        type: "user",
+        title: "Khách hàng mới",
+        text: "Một tài khoản mới vừa đăng ký.",
+        time: "15 phút trước",
+        read: true
+    }
+];
+
+
+let coinMode = "add";
+
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+function showSection(id, clickedButton = null) {
+
+    document.querySelectorAll(".page-section")
+        .forEach(section => {
+            section.style.display = "none";
+        });
+
+    const target = document.getElementById(id);
+
+    if (target) {
+        target.style.display = "block";
+    }
+
+
+    document.querySelectorAll(".sb-mi")
+        .forEach(button => {
+            button.classList.remove("active");
+        });
+
+
+    if (clickedButton) {
+        clickedButton.classList.add("active");
+    } else {
+
+        const matching = [
+            ...document.querySelectorAll(".sb-mi")
+        ].find(button =>
+            button.getAttribute("onclick")?.includes(
+                `showSection('${id}'`
+            )
+        );
+
+        if (matching) {
+            matching.classList.add("active");
+        }
+    }
+
+
+    const names = {
+        dashboard: "Dashboard",
+        orders: "Đơn hàng",
+        notifications: "Thông báo",
+        coins: "Quản lý xu",
+        customers: "Tài khoản khách",
+        security: "Bảo mật tài khoản"
+    };
+
+    document.getElementById("breadcrumb").textContent =
+        names[id] || "Dashboard";
+
+
+    if (id === "orders") {
+        renderOrders();
+    }
+
+    if (id === "coins") {
+        renderCoins();
+    }
+
+    if (id === "customers") {
+        renderCustomers();
+    }
+
+    if (id === "notifications") {
+        renderNotifications("fullNotificationList");
+    }
+
+
+    if (window.innerWidth <= 760) {
+        document.getElementById("sidebar")
+            .classList.remove("open");
+    }
+}
+
+
+/* =====================================================
+   SIDEBAR MOBILE
+===================================================== */
+
+function toggleSidebar() {
+
+    document.getElementById("sidebar")
+        .classList.toggle("open");
+
+}
+
+
+/* =====================================================
+   ORDERS
+===================================================== */
+
+function getStatusHTML(status) {
+
+    if (status === "new") {
+        return `<span class="status new">Đơn mới</span>`;
+    }
+
+    if (status === "processing") {
+        return `<span class="status processing">Đang xử lý</span>`;
+    }
+
+    if (status === "done") {
+        return `<span class="status done">Hoàn thành</span>`;
+    }
+
+    return `<span class="status cancel">Đã hủy</span>`;
+}
+
+
+function renderRecentOrders() {
+
+    const box =
+        document.getElementById("recentOrders");
+
+    box.innerHTML = orders
+        .slice(0, 5)
+        .map(order => `
+
+            <div class="order-item">
+
+                <div class="order-icon">
+
+                    <i class="fa-solid fa-box"></i>
+
+                </div>
+
+                <div class="order-info">
+
+                    <strong>
+                        ${order.id} · ${order.user}
+                    </strong>
+
+                    <span>
+                        ${order.service} · ${order.quantity}
+                    </span>
+
+                </div>
+
+                <div>
+                    ${getStatusHTML(order.status)}
+                </div>
+
+                <div class="order-price">
+
+                    <strong>
+                        ${order.coins.toLocaleString()} xu
+                    </strong>
+
+                    <span>
+                        ${order.time}
+                    </span>
+
+                </div>
+
+            </div>
+
+        `)
+        .join("");
+}
+
+
+function renderOrders() {
+
+    const table =
+        document.getElementById("orderTable");
+
+    table.innerHTML = orders
+        .map((order, index) => `
+
+            <tr>
+
+                <td>
+                    <strong>
+                        ${order.id}
+                    </strong>
+                </td>
+
+                <td>
+                    ${order.user}
+                </td>
+
+                <td>
+                    ${order.service}
+                </td>
+
+                <td>
+                    ${order.quantity}
+                </td>
+
+                <td>
+                    <strong style="color:#1677ff">
+                        ${order.coins.toLocaleString()}
+                    </strong>
+                </td>
+
+                <td>
+                    ${getStatusHTML(order.status)}
+                </td>
+
+                <td>
+
+                    <div class="table-actions">
+
+                        ${
+                            order.status === "new"
+                            ? `
+                            <button
+                                onclick="processOrder(${index})"
+                                title="Nhận đơn">
+
+                                <i class="fa-solid fa-play"></i>
+
+                            </button>
+                            `
+                            : ""
+                        }
+
+                        ${
+                            order.status === "processing"
+                            ? `
+                            <button
+                                onclick="completeOrder(${index})"
+                                title="Hoàn thành">
+
+                                <i class="fa-solid fa-check"></i>
+
+                            </button>
+                            `
+                            : ""
+                        }
+
+                        <button
+                            onclick="viewOrder(${index})"
+                            title="Xem">
+
+                            <i class="fa-solid fa-eye"></i>
+
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `)
+        .join("");
+
+
+    updateStats();
+}
+
+
+function processOrder(index) {
+
+    orders[index].status = "processing";
+
+    addNotification(
+        "order",
+        "Đơn đang xử lý",
+        `${orders[index].id} đã được nhận xử lý.`
+    );
+
+    renderOrders();
+    renderRecentOrders();
+
+    showToast("Đã nhận đơn hàng");
+}
+
+
+function completeOrder(index) {
+
+    orders[index].status = "done";
+
+    addNotification(
+        "order",
+        "Đơn hoàn thành",
+        `${orders[index].id} đã hoàn thành.`
+    );
+
+    renderOrders();
+    renderRecentOrders();
+
+    showToast("Đã hoàn thành đơn hàng");
+}
+
+
+function viewOrder(index) {
+
+    const order = orders[index];
+
+    alert(
+        `Mã đơn: ${order.id}\n` +
+        `Khách: ${order.user}\n` +
+        `Dịch vụ: ${order.service}\n` +
+        `Số lượng: ${order.quantity}\n` +
+        `Xu: ${order.coins}\n` +
+        `Trạng thái: ${order.status}`
+    );
+}
+
+
+/* =====================================================
+   NOTIFICATIONS
+===================================================== */
+
+function getNotificationIcon(type) {
+
+    if (type === "order") {
+        return `
+            <div class="notification-icon blue">
+                <i class="fa-solid fa-box"></i>
+            </div>
+        `;
+    }
+
+    if (type === "coin") {
+        return `
+            <div class="notification-icon green">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="notification-icon purple">
+            <i class="fa-solid fa-user"></i>
+        </div>
+    `;
+}
+
+
+function renderNotifications(elementId) {
+
+    const box =
+        document.getElementById(elementId);
+
+    if (!box) return;
+
+
+    box.innerHTML = notifications
+        .map(item => `
+
+            <div class="notification"
+                 style="${item.read ? "" : "background:#fafcff"}">
+
+                ${getNotificationIcon(item.type)}
+
+                <div class="notification-content">
+
+                    <strong>
+                        ${item.title}
+                    </strong>
+
+                    <p>
+                        ${item.text}
+                    </p>
+
+                    <div class="notification-time">
+                        ${item.time}
+                    </div>
+
+                </div>
+
+            </div>
+
+        `)
+        .join("");
+}
+
+
+function addNotification(type, title, text) {
+
+    notifications.unshift({
+        type,
+        title,
+        text,
+        time: "Vừa xong",
+        read: false
+    });
+
+    renderNotifications("notificationList");
+    renderNotifications("fullNotificationList");
+
+    updateNotificationBadge();
+}
+
+
+function markNotificationsRead() {
+
+    notifications.forEach(item => {
+        item.read = true;
+    });
+
+    renderNotifications("notificationList");
+    renderNotifications("fullNotificationList");
+
+    updateNotificationBadge();
+
+    showToast("Đã đánh dấu tất cả thông báo đã đọc");
+}
+
+
+function updateNotificationBadge() {
+
+    const unread =
+        notifications.filter(item => !item.read).length;
+
+    document.getElementById("notificationDot").style.display =
+        unread ? "block" : "none";
+}
+
+
+/* =====================================================
+   COINS
+===================================================== */
+
+function renderCoins() {
+
+    const table =
+        document.getElementById("coinTable");
+
+    table.innerHTML = customers
+        .map((customer, index) => `
+
+            <tr>
+
+                <td>
+
+                    <div class="customer">
+
+                        <div class="customer-avatar">
+                            ${customer.name.charAt(0).toUpperCase()}
+                        </div>
+
+                        <div class="customer-name">
+
+                            <strong>
+                                ${customer.name}
+                            </strong>
+
+                            <span>
+                                ID: ${customer.id}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </td>
+
+                <td>
+
+                    <strong style="color:#1677ff">
+
+                        ${customer.coins.toLocaleString()}
+
+                        xu
+
+                    </strong>
+
+                </td>
+
+                <td>
+
+                    <span class="status done">
+                        ${customer.status}
+                    </span>
+
+                </td>
+
+                <td>
+
+                    <div class="table-actions">
+
+                        <button
+                            onclick="openCoinModalForCustomer(${index}, 'add')">
+
+                            <i class="fa-solid fa-plus"></i>
+
+                        </button>
+
+                        <button
+                            onclick="openCoinModalForCustomer(${index}, 'minus')">
+
+                            <i class="fa-solid fa-minus"></i>
+
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `)
+        .join("");
+}
+
+
+let selectedCustomer = 0;
+
+
+function openCoinModal(mode) {
+
+    selectedCustomer = 0;
+    coinMode = mode;
+
+    updateCoinModal();
+
+    document
+        .getElementById("coinModal")
+        .classList.add("show");
+}
+
+
+function openCoinModalForCustomer(index, mode) {
+
+    selectedCustomer = index;
+    coinMode = mode;
+
+    document
+        .getElementById("coinUser")
+        .value = customers[index].name;
+
+    updateCoinModal();
+
+    document
+        .getElementById("coinModal")
+        .classList.add("show");
+}
+
+
+function updateCoinModal() {
+
+    document.getElementById("coinModalTitle").textContent =
+        coinMode === "add"
+        ? "Cộng xu cho khách"
+        : "Trừ xu của khách";
+
+}
+
+
+function closeCoinModal() {
+
+    document
+        .getElementById("coinModal")
+        .classList.remove("show");
+
+}
+
+
+function submitCoin() {
+
+    const amount =
+        Number(document.getElementById("coinAmount").value);
+
+    const reason =
+        document.getElementById("coinReason").value.trim();
+
+
+    if (!amount || amount <= 0) {
+
+        showToast("Vui lòng nhập số xu hợp lệ");
+
+        return;
+    }
+
+
+    const customer =
+        customers[selectedCustomer];
+
+
+    if (coinMode === "add") {
+
+        customer.coins += amount;
+
+        addNotification(
+            "coin",
+            "Cộng xu thành công",
+            `${customer.name} được cộng ${amount.toLocaleString()} xu.`
+        );
+
+    } else {
+
+        if (customer.coins < amount) {
+
+            showToast("Khách không đủ xu");
+
+            return;
+        }
+
+        customer.coins -= amount;
+
+        addNotification(
+            "coin",
+            "Trừ xu thành công",
+            `${customer.name} bị trừ ${amount.toLocaleString()} xu.`
+        );
+    }
+
+
+    renderCoins();
+    renderCustomers();
+
+    document.getElementById("demoBalance").textContent =
+        customer.coins.toLocaleString() + " xu";
+
+
+    document.getElementById("coinAmount").value = "";
+    document.getElementById("coinReason").value = "";
+
+    closeCoinModal();
+
+    showToast(
+        coinMode === "add"
+        ? "Đã cộng xu thành công"
+        : "Đã trừ xu thành công"
+    );
+
+}
+
+
+/* =====================================================
+   CUSTOMERS
+===================================================== */
+
+function renderCustomers() {
+
+    const table =
+        document.getElementById("customerTable");
+
+    table.innerHTML = customers
+        .map((customer, index) => `
+
+            <tr>
+
+                <td>
+
+                    <div class="customer">
+
+                        <div class="customer-avatar">
+
+                            ${customer.name
+                                .charAt(0)
+                                .toUpperCase()}
+
+                        </div>
+
+                        <div class="customer-name">
+
+                            <strong>
+                                ${customer.name}
+                            </strong>
+
+                            <span>
+                                ID: ${customer.id}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </td>
+
+                <td>
+                    <strong style="color:#1677ff">
+                        ${customer.coins.toLocaleString()} xu
+                    </strong>
+                </td>
+
+                <td>
+                    ${customer.lastLogin}
+                </td>
+
+                <td>
+
+                    ${
+                        customer.status === "Hoạt động"
+                        ? `<span class="status done">Hoạt động</span>`
+                        : `<span class="status cancel">Đã khóa</span>`
+                    }
+
+                </td>
+
+                <td>
+
+                    <div class="table-actions">
+
+                        <button
+                            onclick="manageCustomer(${index})">
+
+                            <i class="fa-solid fa-user-gear"></i>
+
+                        </button>
+
+                        <button
+                            onclick="toggleCustomer(${index})">
+
+                            <i class="fa-solid fa-lock"></i>
+
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `)
+        .join("");
+}
+
+
+function manageCustomer(index) {
+
+    const customer =
+        customers[index];
+
+    alert(
+        `Tài khoản: ${customer.name}\n` +
+        `ID: ${customer.id}\n` +
+        `Xu: ${customer.coins.toLocaleString()}\n` +
+        `Trạng thái: ${customer.status}\n` +
+        `Đăng nhập: ${customer.lastLogin}`
+    );
+}
+
+
+function toggleCustomer(index) {
+
+    const customer =
+        customers[index];
+
+    customer.status =
+        customer.status === "Hoạt động"
+        ? "Đã khóa"
+        : "Hoạt động";
+
+    renderCustomers();
+
+    addNotification(
+        "user",
+        "Thay đổi tài khoản",
+        `${customer.name} hiện ở trạng thái ${customer.status}.`
+    );
+
+    showToast(
+        `Đã ${customer.status === "Hoạt động" ? "mở khóa" : "khóa"} tài khoản`
+    );
+}
+
+
+/* =====================================================
+   DEMO NEW ORDER
+===================================================== */
+
+function simulateOrder() {
+
+    const newNumber =
+        129 + orders.length;
+
+    const newOrder = {
+
+        id: `HK-00${newNumber}`,
+
+        user: "KhachMoi",
+
+        service: "Instagram - Tăng Follow",
+
+        quantity: "1.000",
+
+        coins: 700,
+
+        status: "new",
+
+        time: "Vừa xong"
+
+    };
+
+
+    orders.unshift(newOrder);
+
+
+    addNotification(
+        "order",
+        "🔔 Đơn hàng mới",
+        `${newOrder.user} vừa đặt ${newOrder.service}.`
+    );
+
+
+    renderOrders();
+    renderRecentOrders();
+
+    updateStats();
+
+    showToast(
+        "Có đơn hàng mới!"
+    );
+}
+
+
+/* =====================================================
+   STATS
+===================================================== */
+
+function updateStats() {
+
+    document.getElementById("totalOrders")
+        .textContent = orders.length + 125;
+
+
+    const processing =
+        orders.filter(
+            order => order.status === "processing"
+        ).length;
+
+
+    document.getElementById("processingOrders")
+        .textContent = processing + 14;
+
+
+    document.getElementById("orderBadge")
+        .textContent =
+        orders.filter(
+            order => order.status === "new"
+        ).length;
+}
+
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+function showToast(message) {
+
+    const container =
+        document.getElementById("toastContainer");
+
+
+    const toast =
+        document.createElement("div");
+
+    toast.className = "toast";
+
+
+    toast.innerHTML = `
+
+        <div class="toast-icon">
+
+            <i class="fa-solid fa-check"></i>
+
+        </div>
+
+        <div>
+
+            <strong>
+                HoangKun Store
+            </strong>
+
+            <span>
+                ${message}
+            </span>
+
+        </div>
+
+    `;
+
+
+    container.appendChild(toast);
+
+
+    setTimeout(() => {
+
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(20px)";
+
+        setTimeout(() => {
+            toast.remove();
+        }, 250);
+
+    }, 3000);
+}
+
+
+/* =====================================================
+   USER MENU
+===================================================== */
+
+const userBtn =
+    document.getElementById("userBtn");
+
+const userMenu =
+    document.getElementById("userMenu");
+
+
+userBtn.addEventListener(
+    "click",
+    function(event) {
+
+        event.stopPropagation();
+
+        userMenu.classList.toggle("show");
+
+    }
+);
+
+
+document.addEventListener(
+    "click",
+    function() {
+
+        userMenu.classList.remove("show");
+
+    }
+);
+
+
+/* =====================================================
+   CTRL + K
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
+
+            event.preventDefault();
+
+            const input =
+                document.getElementById("globalSearch");
+
+            if (input) {
+                input.focus();
+            }
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+document
+    .getElementById("globalSearch")
+    .addEventListener(
+        "input",
+        function() {
+
+            const keyword =
+                this.value.toLowerCase().trim();
+
+
+            if (!keyword) {
+                renderOrders();
+                return;
+            }
+
+
+            const filtered =
+                orders.filter(order =>
+                    order.id.toLowerCase().includes(keyword) ||
+                    order.user.toLowerCase().includes(keyword) ||
+                    order.service.toLowerCase().includes(keyword)
+                );
+
+
+            const table =
+                document.getElementById("orderTable");
+
+
+            table.innerHTML =
+                filtered.map(order => `
+
+                    <tr>
+
+                        <td>
+                            <strong>${order.id}</strong>
+                        </td>
+
+                        <td>
+                            ${order.user}
+                        </td>
+
+                        <td>
+                            ${order.service}
+                        </td>
+
+                        <td>
+                            ${order.quantity}
+                        </td>
+
+                        <td>
+                            ${order.coins.toLocaleString()} xu
+                        </td>
+
+                        <td>
+                            ${getStatusHTML(order.status)}
+                        </td>
+
+                        <td>
+                            <span style="color:#9aa6b8">
+                                Kết quả tìm kiếm
+                            </span>
+                        </td>
+
+                    </tr>
+
+                `).join("");
+
+        }
+    );
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+function logout() {
+
+    if (
+        confirm(
+            "Bạn có chắc muốn đăng xuất khỏi khu quản lý?"
+        )
+    ) {
+
+        localStorage.removeItem("adminLogin");
+
+        window.location.href =
+            "index.html";
+
+    }
+
+}
+
+
+/* =====================================================
+   INIT
+===================================================== */
+
+renderRecentOrders();
+
+renderOrders();
+
+renderNotifications("notificationList");
+
+renderNotifications("fullNotificationList");
+
+renderCoins();
+
+renderCustomers();
+
+updateNotificationBadge();
+
+updateStats();
+
+
+/* =====================================================
+   DEMO REALTIME
+   Sau này thay bằng Firebase listener.
+===================================================== */
+
+/*
+Ví dụ khi nối Firebase:
+
+onSnapshot(collection(db, "orders"), (snapshot) => {
+
+    snapshot.docChanges().forEach(change => {
+
+        if (change.type === "added") {
+
+            // nhận đơn mới
+            // cập nhật orders
+            // hiển thị thông báo
+            // cập nhật dashboard
+
+        }
+
+    });
+
+});
+
+*/
+
+
+/* =====================================================
+   CLICK NGOÀI MODAL
+===================================================== */
+
+document
+    .getElementById("coinModal")
+    .addEventListener(
+        "click",
+        function(event) {
+
+            if (event.target === this) {
+                closeCoinModal();
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+</html>
