@@ -880,6 +880,79 @@
             .action-btns { flex-wrap: wrap; }
             .modal-box { margin: 15px; width: auto; max-width: calc(100vw - 30px); }
         }
+
+        /* ========================= CARD MANAGEMENT ========================= */
+
+.card-code {
+    color: #1677ff;
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+
+.card-serial {
+    color: #526074;
+    font-weight: 700;
+}
+
+.card-amount {
+    color: #059669;
+    font-weight: 800;
+}
+
+.card-pending {
+    background: #fff8e8;
+    color: #d97706;
+}
+
+.card-approved {
+    background: #eafaf5;
+    color: #059669;
+}
+
+.card-rejected {
+    background: #fff0f0;
+    color: #dc2626;
+}
+
+.card-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.card-actions button {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+}
+
+.card-approve {
+    background: #eafaf5;
+    color: #059669;
+}
+
+.card-approve:hover {
+    background: #d8f7eb;
+}
+
+.card-reject {
+    background: #fff0f0;
+    color: #dc2626;
+}
+
+.card-reject:hover {
+    background: #ffe0e0;
+}
+
+.card-view {
+    background: #eef5ff;
+    color: #1677ff;
+}
+
+.card-view:hover {
+    background: #dceaff;
+}
     </style> 
 </head> 
 <body> 
@@ -915,6 +988,13 @@
             <span class="sb-icon"><i class="fa-solid fa-coins"></i></span> 
             Quản lý xu 
         </button> 
+        
+        <button class="sb-mi" onclick="showSection('cards', this)"> 
+        <span class="sb-icon"><i class="fa-solid fa-credit-card"></i></span> 
+        Quản lý thẻ cào
+        <span class="sb-badge" id="cardBadge">0</span>
+        </button>
+        
         <button class="sb-mi" onclick="showSection('customers', this)"> 
             <span class="sb-icon"><i class="fa-solid fa-users"></i></span> 
             Tài khoản khách 
@@ -1163,6 +1243,62 @@
             </div> 
         </section> 
 
+        <!-- ========================= CARD MANAGEMENT ========================= -->
+<section id="cards" class="page-section" style="display:none">
+
+    <div class="page-title">
+        <h1>Quản lý thẻ cào</h1>
+        <p>Kiểm tra, duyệt hoặc từ chối thẻ cào khách hàng gửi.</p>
+    </div>
+
+    <div class="card">
+
+        <div class="card-head">
+            <div>
+                <h2>🎫 Danh sách thẻ cào</h2>
+                <p>Các thẻ khách hàng đang chờ xử lý</p>
+            </div>
+
+            <button onclick="loadCardRequests()">
+                <i class="fa-solid fa-rotate"></i>
+                Làm mới
+            </button>
+        </div>
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Nhà mạng</th>
+                        <th>Mệnh giá</th>
+                        <th>Mã thẻ</th>
+                        <th>Serial</th>
+                        <th>Thời gian</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody id="cardTable">
+                    <tr>
+                        <td colspan="8"
+                            style="text-align:center;color:#9aa6b8;padding:25px">
+                            Đang tải dữ liệu...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
+
         <!-- ========================= NOTIFICATIONS ========================= --> 
         <section id="notifications" class="page-section" style="display:none"> 
             <div class="page-title"> 
@@ -1365,20 +1501,25 @@ const db = firebase.database();
 /* ===================================================== 
    GLOBAL DATA
 ===================================================== */ 
-let orders = []; 
-let customers = []; 
-let notifications = []; 
-let coinMode = "add"; 
-let selectedCustomer = 0; 
+let orders = [];
+let customers = [];
+let notifications = [];
+let cardRequests = [];
+
+let coinMode = "add";
+let selectedCustomer = 0;
 let isInitialLoad = true;
 
 /* ===================================================== 
    LẮNG NGHE REALTIME TỪ FIREBASE
 ===================================================== */ 
 db.ref("users").on("value", snapshot => {
-    const newOrders = [];
-    customers = [];
-    let orderAdded = false;
+  const newOrders = [];
+const newCards = [];
+
+customers = [];
+
+let orderAdded = false;
 
     snapshot.forEach(child => {
         const userId = child.key;
@@ -1401,6 +1542,65 @@ db.ref("users").on("value", snapshot => {
             status: userData.isLocked ? "Đã khóa" : "Hoạt động",
             rawStatus: !!userData.isLocked
         });
+
+        /* =========================
+   LẤY THẺ CÀO KHÁCH GỬI
+========================= */
+
+if (userData.cardRequests) {
+
+    Object.keys(userData.cardRequests).forEach(requestId => {
+
+        const card = userData.cardRequests[requestId];
+
+        newCards.push({
+
+            uid: userId,
+
+            requestId: requestId,
+
+            user: name,
+
+            email: email,
+
+            cardType:
+                card.cardType ||
+                card.type ||
+                card.nhaMang ||
+                "Không rõ",
+
+            amount:
+                Number(
+                    card.amount ||
+                    card.menhGia ||
+                    card.value ||
+                    0
+                ),
+
+            cardCode:
+                card.cardCode ||
+                card.code ||
+                card.maThe ||
+                "Không có",
+
+            cardSerial:
+                card.cardSerial ||
+                card.serial ||
+                card.seri ||
+                "Không có",
+
+            status:
+                card.status ||
+                "pending",
+
+            createdAt:
+                Number(card.createdAt || Date.now())
+
+        });
+
+    });
+
+}
         
         // Lấy Đơn hàng từ tất cả các nền tảng
         const platforms = [
@@ -1439,8 +1639,10 @@ db.ref("users").on("value", snapshot => {
         });
     });
 
-    // Sắp xếp đơn mới nhất lên trên
-    newOrders.sort((a, b) => b.createdAt - a.createdAt);
+   /* Sắp xếp thẻ mới nhất */
+newCards.sort((a, b) => b.createdAt - a.createdAt);
+
+cardRequests = newCards;
     
     // Nếu có đơn mới và không phải lần tải đầu tiên, hiện thông báo
     if(!isInitialLoad && newOrders.length > orders.length) {
@@ -1458,6 +1660,8 @@ db.ref("users").on("value", snapshot => {
     renderCustomers();
     updateStats();
     populateCoinModalUsers();
+    renderCards();
+updateCardBadge();
 });
 
 /* ===================================================== 
@@ -1489,7 +1693,8 @@ function showSection(id, clickedButton = null) {
         orders: "Đơn hàng", 
         notifications: "Thông báo", 
         coins: "Quản lý xu", 
-        customers: "Tài khoản khách", 
+        customers: "Tài khoản khách",
+        cards: "Quản lý thẻ cào",
         security: "Bảo mật tài khoản" 
     }; 
     document.getElementById("breadcrumb").textContent = names[id] || "Dashboard"; 
@@ -1961,6 +2166,411 @@ document.getElementById("customerModal").addEventListener("click", function(even
     if (event.target === this) closeCustomerModal(); 
 }); 
 
+    /* =====================================================
+   CARD MANAGEMENT
+===================================================== */
+
+function getCardStatusHTML(status) {
+
+    if (status === "approved") {
+        return `<span class="status card-approved">Đã duyệt</span>`;
+    }
+
+    if (status === "rejected") {
+        return `<span class="status card-rejected">Từ chối</span>`;
+    }
+
+    return `<span class="status card-pending">Chờ duyệt</span>`;
+}
+
+
+function renderCards() {
+
+    const table = document.getElementById("cardTable");
+
+    if (!table) return;
+
+    if (cardRequests.length === 0) {
+
+        table.innerHTML = `
+            <tr>
+                <td colspan="8"
+                    style="text-align:center;color:#9aa6b8;padding:25px">
+                    Chưa có thẻ cào nào.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    table.innerHTML = cardRequests.map((card, index) => {
+
+        const time = card.createdAt
+            ? new Date(card.createdAt).toLocaleString("vi-VN")
+            : "Không rõ";
+
+        const isPending = card.status === "pending";
+
+        return `
+            <tr>
+
+                <td>
+
+                    <div class="customer">
+
+                        <div class="customer-avatar">
+                            ${escapeHTML(card.user.charAt(0).toUpperCase())}
+                        </div>
+
+                        <div class="customer-name">
+
+                            <strong>
+                                ${escapeHTML(card.user)}
+                            </strong>
+
+                            <span>
+                                ${escapeHTML(card.email)}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </td>
+
+                <td>
+                    <strong>
+                        ${escapeHTML(card.cardType)}
+                    </strong>
+                </td>
+
+                <td>
+                    <strong class="card-amount">
+                        ${card.amount.toLocaleString("vi-VN")}đ
+                    </strong>
+                </td>
+
+                <td>
+                    <span class="card-code">
+                        ${escapeHTML(card.cardCode)}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="card-serial">
+                        ${escapeHTML(card.cardSerial)}
+                    </span>
+                </td>
+
+                <td>
+                    ${time}
+                </td>
+
+                <td>
+                    ${getCardStatusHTML(card.status)}
+                </td>
+
+                <td>
+
+                    <div class="card-actions">
+
+                        <button
+                            class="card-view"
+                            onclick="viewCard(${index})"
+                            title="Xem thẻ">
+
+                            <i class="fa-solid fa-eye"></i>
+
+                        </button>
+
+                        ${
+                            isPending
+                            ? `
+                                <button
+                                    class="card-approve"
+                                    onclick="approveCard(${index})"
+                                    title="Duyệt thẻ">
+
+                                    <i class="fa-solid fa-check"></i>
+
+                                </button>
+
+                                <button
+                                    class="card-reject"
+                                    onclick="rejectCard(${index})"
+                                    title="Từ chối">
+
+                                    <i class="fa-solid fa-xmark"></i>
+
+                                </button>
+                            `
+                            : ""
+                        }
+
+                    </div>
+
+                </td>
+
+            </tr>
+        `;
+
+    }).join("");
+}
+
+    function viewCard(index) {
+
+    const card = cardRequests[index];
+
+    if (!card) return;
+
+    const statusText =
+        card.status === "approved"
+            ? "Đã duyệt"
+            : card.status === "rejected"
+                ? "Đã từ chối"
+                : "Chờ duyệt";
+
+    alert(
+        "THÔNG TIN THẺ CÀO\n\n" +
+        "Khách hàng: " + card.user + "\n" +
+        "Email: " + card.email + "\n" +
+        "Nhà mạng: " + card.cardType + "\n" +
+        "Mệnh giá: " + card.amount.toLocaleString("vi-VN") + "đ\n" +
+        "Mã thẻ: " + card.cardCode + "\n" +
+        "Serial: " + card.cardSerial + "\n" +
+        "Trạng thái: " + statusText
+    );
+}
+
+    function approveCard(index) {
+
+    const card = cardRequests[index];
+
+    if (!card) return;
+
+    if (card.status !== "pending") {
+
+        showToast("Thẻ này đã được xử lý trước đó.");
+
+        return;
+    }
+
+    if (!card.amount || card.amount <= 0) {
+
+        showToast("Mệnh giá thẻ không hợp lệ.");
+
+        return;
+    }
+
+    const confirmApprove = confirm(
+        "Duyệt thẻ này?\n\n" +
+        "Khách: " + card.user + "\n" +
+        "Nhà mạng: " + card.cardType + "\n" +
+        "Mệnh giá: " +
+        card.amount.toLocaleString("vi-VN") +
+        "đ\n\n" +
+        "Hệ thống sẽ cộng số xu tương ứng cho khách."
+    );
+
+    if (!confirmApprove) return;
+
+    const cardRef = db.ref(
+        "users/" +
+        card.uid +
+        "/cardRequests/" +
+        card.requestId
+    );
+
+    cardRef.once("value").then(snapshot => {
+
+        const currentCard = snapshot.val();
+
+        if (!currentCard) {
+
+            showToast("Không tìm thấy thẻ trong Database.");
+
+            return;
+        }
+
+        if (currentCard.status &&
+            currentCard.status !== "pending") {
+
+            showToast("Thẻ này đã được xử lý.");
+
+            return;
+        }
+
+        const userRef = db.ref("users/" + card.uid);
+
+        return userRef.once("value").then(userSnapshot => {
+
+            const userData = userSnapshot.val() || {};
+
+            const currentCoins = Number(
+                userData.xu ||
+                userData.balance ||
+                userData.coins ||
+                0
+            );
+
+            const newCoins =
+                currentCoins + Number(card.amount);
+
+            return userRef.update({
+
+                xu: newCoins,
+
+                balance: newCoins,
+
+                coins: newCoins
+
+            }).then(() => {
+
+                return cardRef.update({
+
+                    status: "approved",
+
+                    approvedAt: firebase.database.ServerValue.TIMESTAMP,
+
+                    approvedBy: "HoangKun Admin"
+
+                });
+
+            });
+
+        });
+
+    }).then(() => {
+
+        addNotification(
+            "coin",
+            "Đã duyệt thẻ cào",
+            `${card.user} được cộng ${card.amount.toLocaleString("vi-VN")} xu.`
+        );
+
+        showToast(
+            "Đã duyệt thẻ và cộng " +
+            card.amount.toLocaleString("vi-VN") +
+            " xu"
+        );
+
+    }).catch(error => {
+
+        console.error(error);
+
+        showToast(
+            "Lỗi khi duyệt thẻ: " +
+            error.message
+        );
+
+    });
+}
+
+    function rejectCard(index) {
+
+    const card = cardRequests[index];
+
+    if (!card) return;
+
+    if (card.status !== "pending") {
+
+        showToast("Thẻ này đã được xử lý.");
+
+        return;
+    }
+
+    const reason = prompt(
+        "Nhập lý do từ chối thẻ:\n\n" +
+        "Ví dụ: Thẻ sai, thẻ đã sử dụng, sai serial..."
+    );
+
+    if (reason === null) return;
+
+    const rejectReason =
+        reason.trim() || "Thẻ không hợp lệ";
+
+    const cardRef = db.ref(
+        "users/" +
+        card.uid +
+        "/cardRequests/" +
+        card.requestId
+    );
+
+    cardRef.once("value").then(snapshot => {
+
+        const currentCard = snapshot.val();
+
+        if (!currentCard) {
+
+            showToast("Không tìm thấy thẻ.");
+
+            return;
+        }
+
+        if (
+            currentCard.status &&
+            currentCard.status !== "pending"
+        ) {
+
+            showToast("Thẻ này đã được xử lý.");
+
+            return;
+        }
+
+        return cardRef.update({
+
+            status: "rejected",
+
+            rejectReason: rejectReason,
+
+            rejectedAt:
+                firebase.database.ServerValue.TIMESTAMP,
+
+            rejectedBy:
+                "HoangKun Admin"
+
+        });
+
+    }).then(() => {
+
+        addNotification(
+            "order",
+            "Từ chối thẻ cào",
+            `${card.user}: ${rejectReason}`
+        );
+
+        showToast("Đã từ chối thẻ cào.");
+
+    }).catch(error => {
+
+        console.error(error);
+
+        showToast(
+            "Lỗi khi từ chối thẻ: " +
+            error.message
+        );
+
+    });
+}
+
+    function updateCardBadge() {
+
+    const badge = document.getElementById("cardBadge");
+
+    if (!badge) return;
+
+    const pending = cardRequests.filter(
+        card => card.status === "pending"
+    ).length;
+
+    badge.textContent = pending;
+
+    badge.style.display =
+        pending > 0 ? "grid" : "none";
+}
+
+    
 </script> 
 </body> 
 </html>
