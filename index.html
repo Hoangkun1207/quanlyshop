@@ -830,6 +830,56 @@
             .order-price { display: none; } 
             .status { margin-left: auto; } 
         } 
+
+        /* ========================= MOBILE & RESPONSIVE ========================= */ 
+        .mobile-menu { display: none; border: none; cursor: pointer; } 
+        
+        @media(max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        @media(max-width: 800px) {
+            :root { --sidebar: 0px; }
+            
+            /* Sidebar trượt từ trái sang */
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+            .sidebar.open { transform: translateX(0) !important; }
+            
+            .main { margin-left: 0; }
+            .topbar { padding: 0 15px; }
+            
+            /* Nút 3 gạch */
+            .mobile-menu {
+                display: grid;
+                place-items: center;
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                background: #eef5ff;
+                color: #1677ff;
+                margin-right: 15px;
+                font-size: 18px;
+            }
+            
+            .crumb { display: none; } /* Ẩn breadcrumb cho gọn */
+            .content { padding: 20px 15px; }
+            
+            /* Bảng cuộn ngang mượt mà */
+            .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            table { min-width: 700px; } 
+            
+            /* User Info */
+            .user-box span { display: none; }
+            .user-box { padding: 4px; border-radius: 50%; border: none; background: transparent; }
+        }
+        
+        @media(max-width: 500px) {
+            .stats-grid { grid-template-columns: 1fr; gap: 15px; }
+            .action-btns { flex-wrap: wrap; }
+            .modal-box { margin: 15px; width: auto; max-width: calc(100vw - 30px); }
+        }
     </style> 
 </head> 
 <body> 
