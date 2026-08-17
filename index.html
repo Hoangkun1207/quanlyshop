@@ -1093,7 +1093,6 @@
                         <h2>Tất cả đơn hàng</h2> 
                         <p>Danh sách đơn từ khách hàng</p> 
                     </div> 
-                    <!-- Nút tạo đơn demo đã bị loại bỏ vì đã có kết nối thật -->
                 </div> 
                 <div class="table-wrap"> 
                     <table> 
@@ -1251,6 +1250,46 @@
     </div> 
 </div> 
 
+<!-- ========================= CUSTOMER MODAL ========================= --> 
+<div class="modal" id="customerModal"> 
+    <div class="modal-box"> 
+        <div class="modal-head"> 
+            <h3 id="customerModalTitle">Quản lý Khách hàng</h3> 
+            <button class="close-modal" onclick="closeCustomerModal()"> 
+                <i class="fa-solid fa-xmark"></i> 
+            </button> 
+        </div> 
+        <div class="modal-body"> 
+            <input type="hidden" id="editCustomerUid">
+            <div class="form-group"> 
+                <label>Tài khoản (Email)</label> 
+                <input type="text" id="editCustomerEmail" disabled style="background:#f0f3f7; cursor:not-allowed;"> 
+            </div> 
+            <div class="form-group"> 
+                <label>Mật khẩu (Firebase Auth)</label> 
+                <input type="text" value="Đã mã hóa một chiều (Không thể xem)" disabled style="background:#fff0f0; color:#ef4444; font-weight:bold; cursor:not-allowed;"> 
+                <small style="color:#8a96aa; font-weight:600; margin-top:4px; display:block;">Vì lý do bảo mật, Admin không thể xem/đổi pass trực tiếp trên web.</small>
+            </div> 
+            <div class="form-group"> 
+                <label>Tên hiển thị</label> 
+                <input type="text" id="editCustomerName" placeholder="Tên khách hàng"> 
+            </div> 
+            <div class="form-group"> 
+                <label>Số dư Xu</label> 
+                <input type="number" id="editCustomerCoins" min="0"> 
+            </div> 
+            <div class="form-group"> 
+                <label>Trạng thái</label> 
+                <select id="editCustomerStatus">
+                    <option value="false">Hoạt động</option>
+                    <option value="true">Khóa tài khoản</option>
+                </select>
+            </div> 
+            <button class="modal-submit" onclick="saveCustomerInfo()">Lưu thông tin</button> 
+        </div> 
+    </div> 
+</div> 
+
 <!-- TOAST --> 
 <div class="toast-container" id="toastContainer"></div> 
 
@@ -1296,44 +1335,56 @@ db.ref("users").on("value", snapshot => {
         const userData = child.val();
         
         // Cập nhật Customer
-        const name = userData.name || userData.email?.split("@")[0] || "User_" + userId.substring(0,5);
+        const name = userData.name || userData.ho_ten || userData.email?.split("@")[0] || "User_" + userId.substring(0,5);
+        const email = userData.email || "Không có email";
         const coins = Number(userData.xu || userData.balance || userData.coins || 0);
         
         customers.push({
             uid: userId, 
             name: name,
+            email: email,
             id: "HK" + userId.substring(0, 5).toUpperCase(),
             coins: coins,
             lastLogin: "Online", 
             status: userData.isLocked ? "Đã khóa" : "Hoạt động",
-            rawStatus: userData.isLocked
+            rawStatus: !!userData.isLocked
         });
         
-        // Lấy Đơn hàng Facebook của User
-        if (userData.facebookOrders) {
-            Object.keys(userData.facebookOrders).forEach(orderId => {
-                const orderData = userData.facebookOrders[orderId];
-                
-                // Chuẩn hóa Status từ Firebase sang hệ thống Admin
-                let internalStatus = "new";
-                if(orderData.status === "Đang xử lý") internalStatus = "processing";
-                else if(orderData.status === "Hoàn thành") internalStatus = "done";
-                else if(orderData.status === "Đã hủy") internalStatus = "cancel";
+        // Lấy Đơn hàng từ tất cả các nền tảng
+        const platforms = [
+            { key: 'facebookOrders', name: 'Facebook' },
+            { key: 'instagramOrders', name: 'Instagram' },
+            { key: 'tiktokOrders', name: 'TikTok' },
+            { key: 'youtubeOrders', name: 'YouTube' }
+        ];
 
-                newOrders.push({
-                    uid: userId, 
-                    originalStatus: orderData.status,
-                    id: orderData.orderId,
-                    user: name,
-                    service: orderData.service,
-                    quantity: orderData.quantity,
-                    coins: orderData.total,
-                    status: internalStatus,
-                    time: new Date(orderData.createdAt).toLocaleString("vi-VN"),
-                    createdAt: orderData.createdAt
+        platforms.forEach(plat => {
+            if (userData[plat.key]) {
+                Object.keys(userData[plat.key]).forEach(orderId => {
+                    const orderData = userData[plat.key][orderId];
+                    
+                    // Chuẩn hóa Status
+                    let internalStatus = "new";
+                    if(orderData.status === "Đang xử lý") internalStatus = "processing";
+                    else if(orderData.status === "Hoàn thành") internalStatus = "done";
+                    else if(orderData.status === "Đã hủy") internalStatus = "cancel";
+
+                    newOrders.push({
+                        uid: userId, 
+                        platform: plat.key,
+                        originalStatus: orderData.status,
+                        id: orderData.orderId || orderId,
+                        user: name,
+                        service: orderData.service || "Dịch vụ",
+                        quantity: orderData.quantity || 0,
+                        coins: orderData.total || orderData.coins || 0,
+                        status: internalStatus,
+                        time: new Date(orderData.createdAt).toLocaleString("vi-VN"),
+                        createdAt: orderData.createdAt || 0
+                    });
                 });
-            });
-        }
+            }
+        });
     });
 
     // Sắp xếp đơn mới nhất lên trên
@@ -1341,7 +1392,7 @@ db.ref("users").on("value", snapshot => {
     
     // Nếu có đơn mới và không phải lần tải đầu tiên, hiện thông báo
     if(!isInitialLoad && newOrders.length > orders.length) {
-        addNotification("order", "🔔 Đơn hàng mới", `Hệ thống vừa nhận đơn hàng Facebook mới.`);
+        addNotification("order", "🔔 Đơn hàng mới", `Hệ thống vừa nhận đơn hàng mới.`);
         showToast("Có đơn hàng mới!");
     }
     
@@ -1424,7 +1475,7 @@ function renderRecentOrders() {
     }
     box.innerHTML = orders.slice(0, 5).map(order => ` 
         <div class="order-item"> 
-            <div class="order-icon"><i class="fa-brands fa-facebook"></i></div> 
+            <div class="order-icon"><i class="fa-solid fa-box"></i></div> 
             <div class="order-info"> 
                 <strong>${order.id} · ${order.user}</strong> 
                 <span>${order.service} · ${order.quantity}</span> 
@@ -1469,8 +1520,7 @@ function renderOrders() {
 
 function processOrder(index) { 
     const order = orders[index];
-    // Ghi đè vào DB khách
-    db.ref("users/" + order.uid + "/facebookOrders/" + order.id).update({
+    db.ref("users/" + order.uid + "/" + order.platform + "/" + order.id).update({
         status: "Đang xử lý"
     }).then(() => {
         addNotification("order", "Đơn đang xử lý", `${order.id} đã được nhận xử lý.`); 
@@ -1480,7 +1530,7 @@ function processOrder(index) {
 
 function completeOrder(index) { 
     const order = orders[index];
-    db.ref("users/" + order.uid + "/facebookOrders/" + order.id).update({
+    db.ref("users/" + order.uid + "/" + order.platform + "/" + order.id).update({
         status: "Hoàn thành"
     }).then(() => {
         addNotification("order", "Đơn hoàn thành", `${order.id} đã hoàn thành.`); 
@@ -1625,8 +1675,7 @@ function renderCustomers() {
                 <td><span class="status done">An toàn</span></td> 
                 <td> 
                     <div class="table-actions"> 
-                        <button onclick="showToast('Tính năng đang hoàn thiện')"><i class="fa-solid fa-user-gear"></i></button> 
-                        <button onclick="showToast('Tính năng đang hoàn thiện')"><i class="fa-solid fa-key"></i></button> 
+                        <button onclick="manageCustomer(${index})"><i class="fa-solid fa-user-gear"></i></button> 
                         <button onclick="toggleCustomer(${index})"><i class="fa-solid fa-lock"></i></button> 
                     </div> 
                 </td> 
@@ -1637,14 +1686,44 @@ function renderCustomers() {
 
 function manageCustomer(index) { 
     const customer = customers[index]; 
-    alert(`Tài khoản: ${customer.name}\nID: ${customer.id}\nXu: ${customer.coins.toLocaleString()}\nTrạng thái: ${customer.status}\nĐăng nhập: ${customer.lastLogin}`); 
+    document.getElementById("editCustomerUid").value = customer.uid;
+    document.getElementById("editCustomerEmail").value = customer.email;
+    document.getElementById("editCustomerName").value = customer.name;
+    document.getElementById("editCustomerCoins").value = customer.coins;
+    document.getElementById("editCustomerStatus").value = customer.rawStatus ? "true" : "false";
+
+    document.getElementById("customerModal").classList.add("show");
 } 
+
+function closeCustomerModal() {
+    document.getElementById("customerModal").classList.remove("show");
+}
+
+function saveCustomerInfo() {
+    const uid = document.getElementById("editCustomerUid").value;
+    const name = document.getElementById("editCustomerName").value.trim();
+    const coins = Number(document.getElementById("editCustomerCoins").value);
+    const isLocked = document.getElementById("editCustomerStatus").value === "true";
+
+    if(!uid) return;
+
+    db.ref("users/" + uid).update({
+        name: name,
+        ho_ten: name,
+        xu: coins,
+        isLocked: isLocked
+    }).then(() => {
+        showToast("Đã lưu thông tin khách hàng");
+        closeCustomerModal();
+    }).catch(err => {
+        showToast("Lỗi: " + err.message);
+    });
+}
 
 function toggleCustomer(index) { 
     const customer = customers[index]; 
     const newLockStatus = !customer.rawStatus;
     
-    // Cập nhật Firebase
     db.ref("users/" + customer.uid).update({
         isLocked: newLockStatus
     }).then(() => {
@@ -1704,7 +1783,6 @@ function submitCoin() {
 
     if(newBalance < 0) return showToast("Khách không đủ xu để trừ");
     
-    // Ghi đè số dư lên Firebase
     db.ref("users/" + customer.uid).update({
         xu: newBalance
     }).then(() => {
@@ -1773,8 +1851,10 @@ userBtn.addEventListener("click", function(event) {
     userMenu.classList.toggle("show"); 
 }); 
 
-document.addEventListener("click", function() { 
-    userMenu.classList.remove("show"); 
+document.addEventListener("click", function(event) { 
+    if (!userMenu.contains(event.target) && !userBtn.contains(event.target)) {
+        userMenu.classList.remove("show"); 
+    }
 }); 
 
 document.addEventListener("keydown", function(event) { 
@@ -1820,6 +1900,9 @@ function logout() {
 
 document.getElementById("coinModal").addEventListener("click", function(event) { 
     if (event.target === this) closeCoinModal(); 
+}); 
+document.getElementById("customerModal").addEventListener("click", function(event) { 
+    if (event.target === this) closeCustomerModal(); 
 }); 
 
 </script> 
