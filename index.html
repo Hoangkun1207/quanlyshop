@@ -1553,55 +1553,56 @@ if (userData.cardRequests) {
 
         const card = userData.cardRequests[requestId];
 
-        newCards.push({
+      newCards.push({
 
-            uid: userId,
+    uid: userId,
 
-            requestId: requestId,
+    requestId: requestId,
 
-            user: name,
+    user: name,
 
-            email: email,
+    email: email,
 
-            cardType:
-                card.cardType ||
-                card.type ||
-                card.nhaMang ||
-                "Không rõ",
+    cardType:
+        card.type ||
+        card.cardType ||
+        card.nhaMang ||
+        "Không rõ",
 
-            amount:
-                Number(
-                    card.amount ||
-                    card.menhGia ||
-                    card.value ||
-                    0
-                ),
+    amount:
+        Number(
+            card.amount ||
+            card.menhGia ||
+            card.value ||
+            0
+        ),
 
-            cardCode:
-                card.cardCode ||
-                card.code ||
-                card.maThe ||
-                "Không có",
+    cardCode:
+        card.pin ||
+        card.cardCode ||
+        card.code ||
+        card.maThe ||
+        "Không có",
 
-            cardSerial:
-                card.cardSerial ||
-                card.serial ||
-                card.seri ||
-                "Không có",
+    cardSerial:
+        card.serial ||
+        card.cardSerial ||
+        card.seri ||
+        "Không có",
 
-            status:
-                card.status ||
-                "pending",
+    status:
+        card.status ||
+        "pending",
 
-            createdAt:
-                Number(card.createdAt || Date.now())
-
-        });
-
-    });
-
-}
-        
+    createdAt:
+        Number(
+            card.time ||
+            card.createdAt ||
+            Date.now()
+          )
+       });
+     });
+    }
         // Lấy Đơn hàng từ tất cả các nền tảng
         const platforms = [
             { key: 'facebookOrders', name: 'Facebook' },
