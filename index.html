@@ -9,6 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"> 
+    
+    <!-- Thêm Firebase SDK cho trang quản trị -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style> 
         :root { 
             --primary: #1677ff; 
@@ -833,7 +839,6 @@
     <div class="brand"> 
         <div class="brand-logo"> 
             <i class="fa-solid fa-bolt"></i> 
-        }
         </div> 
         <div> 
             HOANGKUN 
@@ -951,7 +956,7 @@
                     </div> 
                     <div class="stat-label">Tổng đơn hàng</div> 
                     <div class="stat-value" id="totalOrders">0</div> 
-                    <div class="stat-desc">+0 đơn trong hôm nay</div> 
+                    <div class="stat-desc">Toàn hệ thống</div> 
                 </div> 
                 <div class="stat-card"> 
                     <div class="stat-top"> 
@@ -967,7 +972,7 @@
                     </div> 
                     <div class="stat-label">Khách hàng</div> 
                     <div class="stat-value" id="totalCustomers">0</div> 
-                    <div class="stat-desc">0 khách mới hôm nay</div> 
+                    <div class="stat-desc">Khách hàng đã đăng ký</div> 
                 </div> 
                 <div class="stat-card"> 
                     <div class="stat-top"> 
@@ -984,8 +989,8 @@
                 <div class="card"> 
                     <div class="card-head"> 
                         <div> 
-                            <h2>🔔 Đơn hàng mới</h2> 
-                            <p>Các đơn hàng khách vừa gửi</p> 
+                            <h2>🔔 Đơn hàng mới nhất</h2> 
+                            <p>Các đơn hàng khách vừa gửi từ API</p> 
                         </div> 
                         <button onclick="showSection('orders')">Xem tất cả</button> 
                     </div> 
@@ -1042,7 +1047,7 @@
                         <div class="card-head"> 
                             <div> 
                                 <h2>🔐 Trạng thái hệ thống</h2> 
-                                <p>Kiểm tra nhanh</p> 
+                                <p>Đã đồng bộ Firebase Realtime</p> 
                             </div> 
                         </div> 
                         <div class="balance-box"> 
@@ -1050,8 +1055,8 @@
                                 <div class="notification-icon green"><i class="fa-solid fa-database"></i></div> 
                                 <div class="notification-content"> 
                                     <strong>Database</strong> 
-                                    <p>Đang chờ kết nối database thật.</p> 
-                                    <div class="notification-time">READY</div> 
+                                    <p>Đã kết nối dữ liệu Firebase.</p> 
+                                    <div class="notification-time">ONLINE</div> 
                                 </div> 
                             </div> 
                             <div class="notification"> 
@@ -1059,7 +1064,7 @@
                                 <div class="notification-content"> 
                                     <strong>Realtime</strong> 
                                     <p>Sẵn cấu trúc để nhận đơn realtime.</p> 
-                                    <div class="notification-time">READY</div> 
+                                    <div class="notification-time">ONLINE</div> 
                                 </div> 
                             </div> 
                             <div class="notification"> 
@@ -1080,7 +1085,7 @@
         <section id="orders" class="page-section" style="display:none"> 
             <div class="page-title"> 
                 <h1>Quản lý đơn hàng</h1> 
-                <p>Theo dõi và cập nhật trạng thái đơn hàng.</p> 
+                <p>Theo dõi và cập nhật trạng thái đơn hàng (Đồng bộ Firebase).</p> 
             </div> 
             <div class="card"> 
                 <div class="card-head"> 
@@ -1088,7 +1093,7 @@
                         <h2>Tất cả đơn hàng</h2> 
                         <p>Danh sách đơn từ khách hàng</p> 
                     </div> 
-                    <button onclick="simulateOrder()">+ Tạo đơn demo</button> 
+                    <!-- Nút tạo đơn demo đã bị loại bỏ vì đã có kết nối thật -->
                 </div> 
                 <div class="table-wrap"> 
                     <table> 
@@ -1131,7 +1136,7 @@
         <section id="coins" class="page-section" style="display:none"> 
             <div class="page-title"> 
                 <h1>Quản lý xu</h1> 
-                <p>Cộng, trừ và theo dõi biến động xu của khách.</p> 
+                <p>Cộng, trừ và theo dõi biến động xu của khách (Tác động Database).</p> 
             </div> 
             <div class="card"> 
                 <div class="card-head"> 
@@ -1251,13 +1256,106 @@
 
 <script> 
 /* ===================================================== 
-   DATA (Đã được làm sạch và đưa về 0)
+   FIREBASE INITIALIZATION
+===================================================== */ 
+const firebaseConfig = {
+    apiKey: "AIzaSyAaIOO-6LQs2vZTDBAeJX8piKX4pjfyCbM",
+    authDomain: "shophoangkun.firebaseapp.com",
+    databaseURL: "https://shophoangkun-default-rtdb.firebaseio.com",
+    projectId: "shophoangkun",
+    storageBucket: "shophoangkun.firebasestorage.app",
+    messagingSenderId: "364993334554",
+    appId: "1:364993334554:web:800c66509b355ebf5370a3"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
+
+/* ===================================================== 
+   GLOBAL DATA
 ===================================================== */ 
 let orders = []; 
 let customers = []; 
 let notifications = []; 
 let coinMode = "add"; 
 let selectedCustomer = 0; 
+let isInitialLoad = true;
+
+/* ===================================================== 
+   LẮNG NGHE REALTIME TỪ FIREBASE
+===================================================== */ 
+db.ref("users").on("value", snapshot => {
+    const newOrders = [];
+    customers = [];
+    let orderAdded = false;
+
+    snapshot.forEach(child => {
+        const userId = child.key;
+        const userData = child.val();
+        
+        // Cập nhật Customer
+        const name = userData.name || userData.email?.split("@")[0] || "User_" + userId.substring(0,5);
+        const coins = Number(userData.xu || userData.balance || userData.coins || 0);
+        
+        customers.push({
+            uid: userId, 
+            name: name,
+            id: "HK" + userId.substring(0, 5).toUpperCase(),
+            coins: coins,
+            lastLogin: "Online", 
+            status: userData.isLocked ? "Đã khóa" : "Hoạt động",
+            rawStatus: userData.isLocked
+        });
+        
+        // Lấy Đơn hàng Facebook của User
+        if (userData.facebookOrders) {
+            Object.keys(userData.facebookOrders).forEach(orderId => {
+                const orderData = userData.facebookOrders[orderId];
+                
+                // Chuẩn hóa Status từ Firebase sang hệ thống Admin
+                let internalStatus = "new";
+                if(orderData.status === "Đang xử lý") internalStatus = "processing";
+                else if(orderData.status === "Hoàn thành") internalStatus = "done";
+                else if(orderData.status === "Đã hủy") internalStatus = "cancel";
+
+                newOrders.push({
+                    uid: userId, 
+                    originalStatus: orderData.status,
+                    id: orderData.orderId,
+                    user: name,
+                    service: orderData.service,
+                    quantity: orderData.quantity,
+                    coins: orderData.total,
+                    status: internalStatus,
+                    time: new Date(orderData.createdAt).toLocaleString("vi-VN"),
+                    createdAt: orderData.createdAt
+                });
+            });
+        }
+    });
+
+    // Sắp xếp đơn mới nhất lên trên
+    newOrders.sort((a, b) => b.createdAt - a.createdAt);
+    
+    // Nếu có đơn mới và không phải lần tải đầu tiên, hiện thông báo
+    if(!isInitialLoad && newOrders.length > orders.length) {
+        addNotification("order", "🔔 Đơn hàng mới", `Hệ thống vừa nhận đơn hàng Facebook mới.`);
+        showToast("Có đơn hàng mới!");
+    }
+    
+    orders = newOrders;
+    isInitialLoad = false;
+
+    // Cập nhật UI sau khi sync dữ liệu
+    renderRecentOrders();
+    renderOrders();
+    renderCoins();
+    renderCustomers();
+    updateStats();
+    populateCoinModalUsers();
+});
 
 /* ===================================================== 
    NAVIGATION 
@@ -1309,7 +1407,7 @@ function toggleSidebar() {
 } 
 
 /* ===================================================== 
-   ORDERS 
+   ORDERS (SYNC WITH FIREBASE)
 ===================================================== */ 
 function getStatusHTML(status) { 
     if (status === "new") return `<span class="status new">Đơn mới</span>`; 
@@ -1326,7 +1424,7 @@ function renderRecentOrders() {
     }
     box.innerHTML = orders.slice(0, 5).map(order => ` 
         <div class="order-item"> 
-            <div class="order-icon"><i class="fa-solid fa-box"></i></div> 
+            <div class="order-icon"><i class="fa-brands fa-facebook"></i></div> 
             <div class="order-info"> 
                 <strong>${order.id} · ${order.user}</strong> 
                 <span>${order.service} · ${order.quantity}</span> 
@@ -1370,19 +1468,24 @@ function renderOrders() {
 } 
 
 function processOrder(index) { 
-    orders[index].status = "processing"; 
-    addNotification("order", "Đơn đang xử lý", `${orders[index].id} đã được nhận xử lý.`); 
-    renderOrders(); 
-    renderRecentOrders(); 
-    showToast("Đã nhận đơn hàng"); 
+    const order = orders[index];
+    // Ghi đè vào DB khách
+    db.ref("users/" + order.uid + "/facebookOrders/" + order.id).update({
+        status: "Đang xử lý"
+    }).then(() => {
+        addNotification("order", "Đơn đang xử lý", `${order.id} đã được nhận xử lý.`); 
+        showToast("Đã nhận đơn hàng"); 
+    });
 } 
 
 function completeOrder(index) { 
-    orders[index].status = "done"; 
-    addNotification("order", "Đơn hoàn thành", `${orders[index].id} đã hoàn thành.`); 
-    renderOrders(); 
-    renderRecentOrders(); 
-    showToast("Đã hoàn thành đơn hàng"); 
+    const order = orders[index];
+    db.ref("users/" + order.uid + "/facebookOrders/" + order.id).update({
+        status: "Hoàn thành"
+    }).then(() => {
+        addNotification("order", "Đơn hoàn thành", `${order.id} đã hoàn thành.`); 
+        showToast("Đã hoàn thành đơn hàng"); 
+    });
 } 
 
 function viewOrder(index) { 
@@ -1440,7 +1543,7 @@ function updateNotificationBadge() {
 } 
 
 /* ===================================================== 
-   COINS & CUSTOMERS 
+   COINS & CUSTOMERS (SYNC WITH FIREBASE)
 ===================================================== */ 
 function renderCoins() { 
     const table = document.getElementById("coinTable"); 
@@ -1522,8 +1625,8 @@ function renderCustomers() {
                 <td><span class="status done">An toàn</span></td> 
                 <td> 
                     <div class="table-actions"> 
-                        <button onclick="showToast('Mở trang quản lý tài khoản')"><i class="fa-solid fa-user-gear"></i></button> 
-                        <button onclick="showToast('Đã gửi yêu cầu reset mật khẩu')"><i class="fa-solid fa-key"></i></button> 
+                        <button onclick="showToast('Tính năng đang hoàn thiện')"><i class="fa-solid fa-user-gear"></i></button> 
+                        <button onclick="showToast('Tính năng đang hoàn thiện')"><i class="fa-solid fa-key"></i></button> 
                         <button onclick="toggleCustomer(${index})"><i class="fa-solid fa-lock"></i></button> 
                     </div> 
                 </td> 
@@ -1539,14 +1642,19 @@ function manageCustomer(index) {
 
 function toggleCustomer(index) { 
     const customer = customers[index]; 
-    customer.status = customer.status === "Hoạt động" ? "Đã khóa" : "Hoạt động"; 
-    renderCustomers(); 
-    addNotification("user", "Thay đổi tài khoản", `${customer.name} hiện ở trạng thái ${customer.status}.`); 
-    showToast(`Đã ${customer.status === "Hoạt động" ? "mở khóa" : "khóa"} tài khoản`); 
+    const newLockStatus = !customer.rawStatus;
+    
+    // Cập nhật Firebase
+    db.ref("users/" + customer.uid).update({
+        isLocked: newLockStatus
+    }).then(() => {
+        addNotification("user", "Thay đổi tài khoản", `${customer.name} hiện đã bị ${newLockStatus ? "khóa" : "mở khóa"}.`); 
+        showToast(`Đã ${newLockStatus ? "khóa" : "mở khóa"} tài khoản`); 
+    });
 } 
 
 /* ===================================================== 
-   COIN MODAL LOGIC 
+   COIN MODAL LOGIC (FIREBASE PUSH)
 ===================================================== */
 function populateCoinModalUsers() {
     const select = document.getElementById("coinUser");
@@ -1592,49 +1700,23 @@ function submitCoin() {
     if (!amount || amount <= 0) return showToast("Vui lòng nhập số xu hợp lệ"); 
 
     const customer = customers[selectedCustomer]; 
-    if (coinMode === "add") { 
-        customer.coins += amount; 
-        addNotification("coin", "Cộng xu thành công", `${customer.name} được cộng ${amount.toLocaleString()} xu.`); 
-    } else { 
-        if (customer.coins < amount) return showToast("Khách không đủ xu"); 
-        customer.coins -= amount; 
-        addNotification("coin", "Trừ xu thành công", `${customer.name} bị trừ ${amount.toLocaleString()} xu.`); 
-    } 
+    const newBalance = coinMode === "add" ? customer.coins + amount : customer.coins - amount;
 
-    renderCoins(); 
-    renderCustomers(); 
+    if(newBalance < 0) return showToast("Khách không đủ xu để trừ");
     
-    if(selectedCustomer == 0) {
-        document.getElementById("demoBalance").textContent = customer.coins.toLocaleString() + " xu"; 
-    }
-
-    document.getElementById("coinAmount").value = ""; 
-    document.getElementById("coinReason").value = ""; 
-    closeCoinModal(); 
-    showToast(coinMode === "add" ? "Đã cộng xu thành công" : "Đã trừ xu thành công"); 
-    updateStats();
-} 
-
-/* ===================================================== 
-   DEMO NEW ORDER 
-===================================================== */ 
-function simulateOrder() { 
-    const newNumber = orders.length + 1; 
-    const newOrder = { 
-        id: `HK-00${newNumber}`, 
-        user: "KhachMoi", 
-        service: "Instagram - Tăng Follow", 
-        quantity: "1.000", 
-        coins: 700, 
-        status: "new", 
-        time: "Vừa xong" 
-    }; 
-    orders.unshift(newOrder); 
-    addNotification("order", "🔔 Đơn hàng mới", `${newOrder.user} vừa đặt ${newOrder.service}.`); 
-    renderOrders(); 
-    renderRecentOrders(); 
-    updateStats(); 
-    showToast("Có đơn hàng mới!"); 
+    // Ghi đè số dư lên Firebase
+    db.ref("users/" + customer.uid).update({
+        xu: newBalance
+    }).then(() => {
+        addNotification("coin", coinMode === "add" ? "Cộng xu" : "Trừ xu", `${customer.name} đã được ${coinMode === "add" ? "cộng" : "trừ"} ${amount.toLocaleString()} xu.`); 
+        
+        document.getElementById("coinAmount").value = ""; 
+        document.getElementById("coinReason").value = ""; 
+        closeCoinModal(); 
+        showToast(coinMode === "add" ? "Đã cộng xu thành công" : "Đã trừ xu thành công"); 
+    }).catch((err) => {
+        showToast("Có lỗi xảy ra: " + err.message);
+    });
 } 
 
 /* ===================================================== 
@@ -1739,18 +1821,6 @@ function logout() {
 document.getElementById("coinModal").addEventListener("click", function(event) { 
     if (event.target === this) closeCoinModal(); 
 }); 
-
-/* ===================================================== 
-   INIT 
-===================================================== */ 
-renderRecentOrders(); 
-renderOrders(); 
-renderNotifications("notificationList"); 
-renderNotifications("fullNotificationList"); 
-renderCoins(); 
-renderCustomers(); 
-updateNotificationBadge(); 
-updateStats(); 
 
 </script> 
 </body> 
