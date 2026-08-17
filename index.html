@@ -1071,7 +1071,7 @@
                                 <div class="notification-icon green"><i class="fa-solid fa-shield-halved"></i></div> 
                                 <div class="notification-content"> 
                                     <strong>Bảo mật</strong> 
-                                    <p>Không hiển thị mật khẩu plaintext.</p> 
+                                    <p>Hỗ trợ cập nhật qua CSDL.</p> 
                                     <div class="notification-time">SAFE</div> 
                                 </div> 
                             </div> 
@@ -1200,17 +1200,17 @@
                 <div class="card-head"> 
                     <div> 
                         <h2>Quản lý bảo mật</h2> 
-                        <p>Không hiển thị mật khẩu thật của khách.</p> 
+                        <p>Kiểm soát email, mật khẩu khách hàng trong DB.</p> 
                     </div> 
                 </div> 
                 <div class="table-wrap"> 
                     <table> 
                         <thead> 
                             <tr> 
-                                <th>Tài khoản</th> 
+                                <th>Khách hàng</th>
+                                <th>Email</th>
+                                <th>Mật khẩu</th> 
                                 <th>Trạng thái</th> 
-                                <th>Lần đăng nhập</th> 
-                                <th>Bảo mật</th> 
                                 <th>Thao tác</th> 
                             </tr> 
                         </thead> 
@@ -1266,9 +1266,9 @@
                 <input type="text" id="editCustomerEmail" disabled style="background:#f0f3f7; cursor:not-allowed;"> 
             </div> 
             <div class="form-group"> 
-                <label>Mật khẩu (Firebase Auth)</label> 
-                <input type="text" value="Đã mã hóa một chiều (Không thể xem)" disabled style="background:#fff0f0; color:#ef4444; font-weight:bold; cursor:not-allowed;"> 
-                <small style="color:#8a96aa; font-weight:600; margin-top:4px; display:block;">Vì lý do bảo mật, Admin không thể xem/đổi pass trực tiếp trên web.</small>
+                <label>Mật khẩu (Cập nhật trong DB)</label> 
+                <input type="text" id="editCustomerPassword" class="form-control" placeholder="Nhập mật khẩu mới"> 
+                <small style="color:#ef4444; font-weight:600; margin-top:4px; display:block;">Lưu ý: Sửa ở đây chỉ lưu vào Database, không thay đổi mật khẩu đăng nhập gốc của hệ thống Firebase.</small>
             </div> 
             <div class="form-group"> 
                 <label>Tên hiển thị</label> 
@@ -1337,12 +1337,14 @@ db.ref("users").on("value", snapshot => {
         // Cập nhật Customer
         const name = userData.name || userData.ho_ten || userData.email?.split("@")[0] || "User_" + userId.substring(0,5);
         const email = userData.email || "Không có email";
+        const password = userData.password || userData.mat_khau || "Chưa lưu";
         const coins = Number(userData.xu || userData.balance || userData.coins || 0);
         
         customers.push({
             uid: userId, 
             name: name,
             email: email,
+            password: password,
             id: "HK" + userId.substring(0, 5).toUpperCase(),
             coins: coins,
             lastLogin: "Online", 
@@ -1627,6 +1629,7 @@ function renderCoins() {
 function renderCustomers() { 
     const table = document.getElementById("customerTable"); 
     const secTable = document.getElementById("securityTable");
+    
     if(customers.length === 0) {
         table.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9aa6b8;padding:20px;">Chưa có khách hàng</td></tr>`;
         if(secTable) secTable.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9aa6b8;padding:20px;">Chưa có khách hàng</td></tr>`;
@@ -1670,13 +1673,12 @@ function renderCustomers() {
                         </div> 
                     </div> 
                 </td>
+                <td>${customer.email}</td>
+                <td style="color:#ef4444; font-weight:700;">${customer.password}</td>
                 <td>${customer.status === "Hoạt động" ? `<span class="status done">Hoạt động</span>` : `<span class="status cancel">Đã khóa</span>`}</td> 
-                <td>${customer.lastLogin}</td> 
-                <td><span class="status done">An toàn</span></td> 
                 <td> 
                     <div class="table-actions"> 
-                        <button onclick="manageCustomer(${index})"><i class="fa-solid fa-user-gear"></i></button> 
-                        <button onclick="toggleCustomer(${index})"><i class="fa-solid fa-lock"></i></button> 
+                        <button onclick="manageCustomer(${index})"><i class="fa-solid fa-pen-to-square"></i></button> 
                     </div> 
                 </td> 
             </tr>
@@ -1688,6 +1690,7 @@ function manageCustomer(index) {
     const customer = customers[index]; 
     document.getElementById("editCustomerUid").value = customer.uid;
     document.getElementById("editCustomerEmail").value = customer.email;
+    document.getElementById("editCustomerPassword").value = customer.password !== "Chưa lưu" ? customer.password : "";
     document.getElementById("editCustomerName").value = customer.name;
     document.getElementById("editCustomerCoins").value = customer.coins;
     document.getElementById("editCustomerStatus").value = customer.rawStatus ? "true" : "false";
@@ -1702,6 +1705,7 @@ function closeCustomerModal() {
 function saveCustomerInfo() {
     const uid = document.getElementById("editCustomerUid").value;
     const name = document.getElementById("editCustomerName").value.trim();
+    const password = document.getElementById("editCustomerPassword").value.trim();
     const coins = Number(document.getElementById("editCustomerCoins").value);
     const isLocked = document.getElementById("editCustomerStatus").value === "true";
 
@@ -1710,6 +1714,8 @@ function saveCustomerInfo() {
     db.ref("users/" + uid).update({
         name: name,
         ho_ten: name,
+        mat_khau: password,
+        password: password,
         xu: coins,
         isLocked: isLocked
     }).then(() => {
