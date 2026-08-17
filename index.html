@@ -2040,14 +2040,22 @@ function submitCoin() {
     if (!amount || amount <= 0) return showToast("Vui lòng nhập số xu hợp lệ"); 
 
     const customer = customers[selectedCustomer]; 
-    const newBalance = coinMode === "add" ? customer.coins + amount : customer.coins - amount;
+    const coinAmount = amount * 30;
+
+const newBalance = coinMode === "add"
+    ? customer.coins + coinAmount
+    : customer.coins - coinAmount;
 
     if(newBalance < 0) return showToast("Khách không đủ xu để trừ");
     
     db.ref("users/" + customer.uid).update({
         xu: newBalance
     }).then(() => {
-        addNotification("coin", coinMode === "add" ? "Cộng xu" : "Trừ xu", `${customer.name} đã được ${coinMode === "add" ? "cộng" : "trừ"} ${amount.toLocaleString()} xu.`); 
+        addNotification(
+    "coin",
+    coinMode === "add" ? "Cộng xu" : "Trừ xu",
+    `${customer.name} đã được ${coinMode === "add" ? "cộng" : "trừ"} ${coinAmount.toLocaleString()} xu.`
+);
         
         document.getElementById("coinAmount").value = ""; 
         document.getElementById("coinReason").value = ""; 
@@ -2414,8 +2422,8 @@ function renderCards() {
                 0
             );
 
-            const newCoins =
-                currentCoins + Number(card.amount);
+           const coinReward = Number(card.amount) * 30;
+           const newCoins = currentCoins + coinReward;
 
             return userRef.update({
 
@@ -2446,13 +2454,13 @@ function renderCards() {
         addNotification(
             "coin",
             "Đã duyệt thẻ cào",
-            `${card.user} được cộng ${card.amount.toLocaleString("vi-VN")} xu.`
+            `${card.user} được cộng ${coinReward.toLocaleString("vi-VN")} xu.`
         );
 
         showToast(
             "Đã duyệt thẻ và cộng " +
-            card.amount.toLocaleString("vi-VN") +
-            " xu"
+        coinReward.toLocaleString("vi-VN") +
+        " xu"
         );
 
     }).catch(error => {
