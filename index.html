@@ -1922,60 +1922,6 @@ function escapeHtml(value) {
 }
 function escapeHTML(str) { return escapeHtml(str); }
 
-/* =========================================================
-   HOANGKUN SECURITY SYSTEM
-   CHỐNG F12 / CHUỘT PHẢI / DEVTOOLS / VIEW SOURCE
-========================================================= */
-(function () {
-    let warningCooldown = false;
-    function securityWarning(message = "Thao tác này không được phép!") {
-        if (warningCooldown) return;
-        warningCooldown = true;
-        setTimeout(() => { warningCooldown = false; }, 1800);
-        if (typeof Swal !== "undefined") {
-            Swal.fire({
-                icon: "warning", title: "⚠️ CẢNH BÁO BẢO MẬT",
-                html: `<div style="text-align:center;color:#64748b;font-size:14px;line-height:1.7;"><div style="width:65px;height:65px;margin:0 auto 15px;border-radius:50%;background:linear-gradient(135deg,#fff7ed,#ffedd5);display:flex;align-items:center;justify-content:center;font-size:30px;">🔒</div><b style="color:#ef4444;font-size:15px;">${message}</b><p style="margin-top:8px;">Vui lòng không cố gắng truy cập công cụ dành cho nhà phát triển.</p><div style="margin-top:14px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;">🛡️ HoangKun Store Security</div></div>`,
-                confirmButtonText: "Đã hiểu", confirmButtonColor: "#1677ff", width: "420px", allowOutsideClick: true, allowEscapeKey: true, backdrop: "rgba(15,23,42,.78)", showClass: { popup: `animate__animated animate__fadeInDown` }
-            });
-        } else { alert("⚠️ CẢNH BÁO BẢO MẬT\n\n" + message); }
-    }
-
-    document.addEventListener("contextmenu", function (e) { e.preventDefault(); securityWarning("Chuột phải đã bị vô hiệu hóa trên trang này!"); return false; }, true);
-    
-    document.addEventListener("keydown", function (e) {
-        const key = e.key.toLowerCase();
-        if (e.key === "F12" || e.keyCode === 123) { e.preventDefault(); e.stopPropagation(); securityWarning("Phím F12 đã bị vô hiệu hóa!"); return false; }
-        if (e.ctrlKey && e.shiftKey && key === "i") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép mở Developer Tools!"); return false; }
-        if (e.ctrlKey && e.shiftKey && key === "j") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép mở Console!"); return false; }
-        if (e.ctrlKey && e.shiftKey && key === "c") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép sử dụng Inspect Element!"); return false; }
-        if (e.ctrlKey && key === "u") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép xem mã nguồn trực tiếp!"); return false; }
-        if (e.ctrlKey && key === "s") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép lưu trang trực tiếp!"); return false; }
-        if (e.ctrlKey && key === "p") { e.preventDefault(); e.stopPropagation(); securityWarning("Chức năng này đã bị giới hạn!"); return false; }
-    }, true);
-
-    document.addEventListener("dragstart", function (e) { if (e.target && e.target.tagName === "IMG") { e.preventDefault(); securityWarning("Không được phép kéo hoặc sao chép hình ảnh!"); return false; } }, true);
-    document.addEventListener("dblclick", function (e) { if (e.target && e.target.tagName === "IMG") { e.preventDefault(); } }, true);
-    document.addEventListener("copy", function (e) { const target = e.target; if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return; e.preventDefault(); securityWarning("Không được phép sao chép nội dung trang!"); }, true);
-    document.addEventListener("cut", function (e) { const target = e.target; if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return; e.preventDefault(); securityWarning("Không được phép cắt nội dung trang!"); }, true);
-    document.addEventListener("selectstart", function (e) { const target = e.target; if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "BUTTON")) return; e.preventDefault(); }, true);
-
-    let devtoolsShown = false;
-    function detectDevTools() {
-        const threshold = 160;
-        const widthDiff = window.outerWidth - window.innerWidth;
-        const heightDiff = window.outerHeight - window.innerHeight;
-        if (widthDiff > threshold || heightDiff > threshold) {
-            if (!devtoolsShown) { devtoolsShown = true; securityWarning("Phát hiện môi trường Developer Tools. Vui lòng đóng công cụ này!"); }
-        } else { devtoolsShown = false; }
-    }
-    setInterval(detectDevTools, 1200);
-
-    window.oncontextmenu = function () { securityWarning("Chuột phải đã bị vô hiệu hóa!"); return false; };
-    window.addEventListener("beforeunload", function () {});
-    console.log("%c🛡️ HOANGKUN SECURITY SYSTEM", "font-size:20px;font-weight:bold;color:#1677ff;");
-    console.log("%c⚠️ Khu vực này dành cho hệ thống.", "font-size:14px;color:#ef4444;font-weight:bold;");
-})();
 </script>
 </body> 
 </html>
