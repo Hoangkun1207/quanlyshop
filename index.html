@@ -1515,11 +1515,9 @@ let isInitialLoad = true;
 ===================================================== */ 
 db.ref("users").on("value", snapshot => {
   const newOrders = [];
-const newCards = [];
-
-customers = [];
-
-let orderAdded = false;
+  const newCards = [];
+  customers = [];
+  let orderAdded = false;
 
     snapshot.forEach(child => {
         const userId = child.key;
@@ -1544,65 +1542,26 @@ let orderAdded = false;
         });
 
         /* =========================
-   LẤY THẺ CÀO KHÁCH GỬI
-========================= */
+           LẤY THẺ CÀO KHÁCH GỬI (ĐÃ SỬA ĐƯỜNG DẪN ĐỒNG BỘ)
+        ========================= */
+        if (userData.card_deposits) {
+            Object.keys(userData.card_deposits).forEach(requestId => {
+                const card = userData.card_deposits[requestId];
+                newCards.push({
+                    uid: userId,
+                    requestId: requestId,
+                    user: name,
+                    email: email,
+                    cardType: card.type || card.nhaMang || "Không rõ",
+                    amount: Number(card.amount || card.menhGia || 0),
+                    cardCode: card.pin || card.maThe || "Không có",
+                    cardSerial: card.serial || card.seri || "Không có",
+                    status: card.status || "Chờ xử lý", // Đồng bộ trạng thái tiếng Việt
+                    createdAt: Number(card.time || card.createdAt || Date.now())
+                });
+            });
+        }
 
-if (userData.cardRequests) {
-
-    Object.keys(userData.cardRequests).forEach(requestId => {
-
-        const card = userData.cardRequests[requestId];
-
-      newCards.push({
-
-    uid: userId,
-
-    requestId: requestId,
-
-    user: name,
-
-    email: email,
-
-    cardType:
-        card.type ||
-        card.cardType ||
-        card.nhaMang ||
-        "Không rõ",
-
-    amount:
-        Number(
-            card.amount ||
-            card.menhGia ||
-            card.value ||
-            0
-        ),
-
-    cardCode:
-        card.pin ||
-        card.cardCode ||
-        card.code ||
-        card.maThe ||
-        "Không có",
-
-    cardSerial:
-        card.serial ||
-        card.cardSerial ||
-        card.seri ||
-        "Không có",
-
-    status:
-        card.status ||
-        "pending",
-
-    createdAt:
-        Number(
-            card.time ||
-            card.createdAt ||
-            Date.now()
-          )
-       });
-     });
-    }
         // Lấy Đơn hàng từ tất cả các nền tảng
         const platforms = [
             { key: 'facebookOrders', name: 'Facebook' },
@@ -1640,10 +1599,9 @@ if (userData.cardRequests) {
         });
     });
 
-   /* Sắp xếp thẻ mới nhất */
-newCards.sort((a, b) => b.createdAt - a.createdAt);
-
-cardRequests = newCards;
+    /* Sắp xếp thẻ mới nhất */
+    newCards.sort((a, b) => b.createdAt - a.createdAt);
+    cardRequests = newCards;
     
     // Nếu có đơn mới và không phải lần tải đầu tiên, hiện thông báo
     if(!isInitialLoad && newOrders.length > orders.length) {
@@ -1662,7 +1620,7 @@ cardRequests = newCards;
     updateStats();
     populateCoinModalUsers();
     renderCards();
-updateCardBadge();
+    updateCardBadge();
 });
 
 /* ===================================================== 
@@ -2038,14 +1996,14 @@ function submitCoin() {
     const reason = document.getElementById("coinReason").value.trim(); 
     selectedCustomer = document.getElementById("coinUser").value;
 
-    if (!amount || amount <= 0) return showToast("Vui lòng nhập số xu hợp lệ"); 
+    if (!amount || amount <= 0) return showToast("Vui lòng nhập số lượng hợp lệ"); 
 
     const customer = customers[selectedCustomer]; 
-    const coinAmount = amount * 30;
+    const coinAmount = amount;
 
-const newBalance = coinMode === "add"
-    ? customer.coins + coinAmount
-    : customer.coins - coinAmount;
+    const newBalance = coinMode === "add"
+        ? customer.coins + coinAmount
+        : customer.coins - coinAmount;
 
     if(newBalance < 0) return showToast("Khách không đủ xu để trừ");
     
@@ -2175,32 +2133,25 @@ document.getElementById("customerModal").addEventListener("click", function(even
     if (event.target === this) closeCustomerModal(); 
 }); 
 
-    /* =====================================================
+/* =====================================================
    CARD MANAGEMENT
 ===================================================== */
 
 function getCardStatusHTML(status) {
-
-    if (status === "approved") {
+    if (status === "Thành công" || status === "approved") {
         return `<span class="status card-approved">Đã duyệt</span>`;
     }
-
-    if (status === "rejected") {
+    if (status === "Thất bại" || status === "Sai thẻ" || status === "rejected") {
         return `<span class="status card-rejected">Từ chối</span>`;
     }
-
     return `<span class="status card-pending">Chờ duyệt</span>`;
 }
 
-
 function renderCards() {
-
     const table = document.getElementById("cardTable");
-
     if (!table) return;
 
     if (cardRequests.length === 0) {
-
         table.innerHTML = `
             <tr>
                 <td colspan="8"
@@ -2209,90 +2160,67 @@ function renderCards() {
                 </td>
             </tr>
         `;
-
         return;
     }
 
     table.innerHTML = cardRequests.map((card, index) => {
-
         const time = card.createdAt
             ? new Date(card.createdAt).toLocaleString("vi-VN")
             : "Không rõ";
 
-        const isPending = card.status === "pending";
+        const isPending = card.status === "Chờ xử lý" || card.status === "pending";
 
         return `
             <tr>
-
                 <td>
-
                     <div class="customer">
-
                         <div class="customer-avatar">
-                            ${escapeHTML(card.user.charAt(0).toUpperCase())}
+                            ${escapeHtml(card.user.charAt(0).toUpperCase())}
                         </div>
-
                         <div class="customer-name">
-
                             <strong>
-                                ${escapeHTML(card.user)}
+                                ${escapeHtml(card.user)}
                             </strong>
-
                             <span>
-                                ${escapeHTML(card.email)}
+                                ${escapeHtml(card.email)}
                             </span>
-
                         </div>
-
                     </div>
-
                 </td>
-
                 <td>
                     <strong>
-                        ${escapeHTML(card.cardType)}
+                        ${escapeHtml(card.cardType)}
                     </strong>
                 </td>
-
                 <td>
                     <strong class="card-amount">
                         ${card.amount.toLocaleString("vi-VN")}đ
                     </strong>
                 </td>
-
                 <td>
                     <span class="card-code">
-                        ${escapeHTML(card.cardCode)}
+                        ${escapeHtml(card.cardCode)}
                     </span>
                 </td>
-
                 <td>
                     <span class="card-serial">
-                        ${escapeHTML(card.cardSerial)}
+                        ${escapeHtml(card.cardSerial)}
                     </span>
                 </td>
-
                 <td>
                     ${time}
                 </td>
-
                 <td>
                     ${getCardStatusHTML(card.status)}
                 </td>
-
                 <td>
-
                     <div class="card-actions">
-
                         <button
                             class="card-view"
                             onclick="viewCard(${index})"
                             title="Xem thẻ">
-
                             <i class="fa-solid fa-eye"></i>
-
                         </button>
-
                         ${
                             isPending
                             ? `
@@ -2300,43 +2228,32 @@ function renderCards() {
                                     class="card-approve"
                                     onclick="approveCard(${index})"
                                     title="Duyệt thẻ">
-
                                     <i class="fa-solid fa-check"></i>
-
                                 </button>
-
                                 <button
                                     class="card-reject"
                                     onclick="rejectCard(${index})"
                                     title="Từ chối">
-
                                     <i class="fa-solid fa-xmark"></i>
-
                                 </button>
                             `
                             : ""
                         }
-
                     </div>
-
                 </td>
-
             </tr>
         `;
-
     }).join("");
 }
 
-    function viewCard(index) {
-
+function viewCard(index) {
     const card = cardRequests[index];
-
     if (!card) return;
 
     const statusText =
-        card.status === "approved"
+        (card.status === "Thành công" || card.status === "approved")
             ? "Đã duyệt"
-            : card.status === "rejected"
+            : (card.status === "Thất bại" || card.status === "Sai thẻ" || card.status === "rejected")
                 ? "Đã từ chối"
                 : "Chờ duyệt";
 
@@ -2352,68 +2269,50 @@ function renderCards() {
     );
 }
 
-    function approveCard(index) {
-
+function approveCard(index) {
     const card = cardRequests[index];
-
     if (!card) return;
 
-    if (card.status !== "pending") {
-
+    if (card.status !== "Chờ xử lý" && card.status !== "pending") {
         showToast("Thẻ này đã được xử lý trước đó.");
-
         return;
     }
 
     if (!card.amount || card.amount <= 0) {
-
         showToast("Mệnh giá thẻ không hợp lệ.");
-
         return;
     }
+
+    const coinReward = Number(card.amount) * 0.8 * 30;
 
     const confirmApprove = confirm(
         "Duyệt thẻ này?\n\n" +
         "Khách: " + card.user + "\n" +
         "Nhà mạng: " + card.cardType + "\n" +
-        "Mệnh giá: " +
-        card.amount.toLocaleString("vi-VN") +
-        "đ\n\n" +
-        "Hệ thống sẽ cộng số xu tương ứng cho khách."
+        "Mệnh giá: " + card.amount.toLocaleString("vi-VN") + "đ\n\n" +
+        "Hệ thống sẽ cộng " + coinReward.toLocaleString("vi-VN") + " xu cho khách (đã trừ 20% phí)."
     );
 
     if (!confirmApprove) return;
 
-    const cardRef = db.ref(
-        "users/" +
-        card.uid +
-        "/cardRequests/" +
-        card.requestId
-    );
+    const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
 
     cardRef.once("value").then(snapshot => {
-
         const currentCard = snapshot.val();
 
         if (!currentCard) {
-
             showToast("Không tìm thấy thẻ trong Database.");
-
             return;
         }
 
-        if (currentCard.status &&
-            currentCard.status !== "pending") {
-
+        if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") {
             showToast("Thẻ này đã được xử lý.");
-
             return;
         }
 
         const userRef = db.ref("users/" + card.uid);
 
         return userRef.once("value").then(userSnapshot => {
-
             const userData = userSnapshot.val() || {};
 
             const currentCoins = Number(
@@ -2423,35 +2322,30 @@ function renderCards() {
                 0
             );
 
-           const coinReward = Number(card.amount) * 30;
-           const newCoins = currentCoins + coinReward;
+            const newCoins = currentCoins + coinReward;
 
             return userRef.update({
-
                 xu: newCoins,
-
                 balance: newCoins,
-
                 coins: newCoins
-
             }).then(() => {
-
-                return cardRef.update({
-
-                    status: "approved",
-
-                    approvedAt: firebase.database.ServerValue.TIMESTAMP,
-
-                    approvedBy: "HoangKun Admin"
-
+                // Ghi vào lịch sử để khách dễ theo dõi
+                db.ref("users/" + card.uid + "/lich_su_hoa_hong").push({
+                    time: Date.now(),
+                    content: "Nạp thẻ cào thành công",
+                    amount: coinReward,
+                    status: "Thành công"
                 });
 
+                return cardRef.update({
+                    status: "Thành công",
+                    approvedAt: firebase.database.ServerValue.TIMESTAMP,
+                    approvedBy: "HoangKun Admin"
+                });
             });
-
         });
 
     }).then(() => {
-
         addNotification(
             "coin",
             "Đã duyệt thẻ cào",
@@ -2465,27 +2359,17 @@ function renderCards() {
         );
 
     }).catch(error => {
-
         console.error(error);
-
-        showToast(
-            "Lỗi khi duyệt thẻ: " +
-            error.message
-        );
-
+        showToast("Lỗi khi duyệt thẻ: " + error.message);
     });
 }
 
-    function rejectCard(index) {
-
+function rejectCard(index) {
     const card = cardRequests[index];
-
     if (!card) return;
 
-    if (card.status !== "pending") {
-
+    if (card.status !== "Chờ xử lý" && card.status !== "pending") {
         showToast("Thẻ này đã được xử lý.");
-
         return;
     }
 
@@ -2496,90 +2380,508 @@ function renderCards() {
 
     if (reason === null) return;
 
-    const rejectReason =
-        reason.trim() || "Thẻ không hợp lệ";
-
-    const cardRef = db.ref(
-        "users/" +
-        card.uid +
-        "/cardRequests/" +
-        card.requestId
-    );
+    const rejectReason = reason.trim() || "Thẻ không hợp lệ";
+    const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
 
     cardRef.once("value").then(snapshot => {
-
         const currentCard = snapshot.val();
-
         if (!currentCard) {
-
             showToast("Không tìm thấy thẻ.");
-
             return;
         }
 
-        if (
-            currentCard.status &&
-            currentCard.status !== "pending"
-        ) {
-
+        if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") {
             showToast("Thẻ này đã được xử lý.");
-
             return;
         }
 
         return cardRef.update({
-
-            status: "rejected",
-
+            status: "Thất bại",
             rejectReason: rejectReason,
-
-            rejectedAt:
-                firebase.database.ServerValue.TIMESTAMP,
-
-            rejectedBy:
-                "HoangKun Admin"
-
+            rejectedAt: firebase.database.ServerValue.TIMESTAMP,
+            rejectedBy: "HoangKun Admin"
         });
 
     }).then(() => {
-
-        addNotification(
-            "order",
-            "Từ chối thẻ cào",
-            `${card.user}: ${rejectReason}`
-        );
-
+        addNotification("order", "Từ chối thẻ cào", `${card.user}: ${rejectReason}`);
         showToast("Đã từ chối thẻ cào.");
-
     }).catch(error => {
-
         console.error(error);
-
-        showToast(
-            "Lỗi khi từ chối thẻ: " +
-            error.message
-        );
-
+        showToast("Lỗi khi từ chối thẻ: " + error.message);
     });
 }
 
-    function updateCardBadge() {
-
+function updateCardBadge() {
     const badge = document.getElementById("cardBadge");
-
     if (!badge) return;
 
     const pending = cardRequests.filter(
-        card => card.status === "pending"
+        card => card.status === "Chờ xử lý" || card.status === "pending"
     ).length;
 
     badge.textContent = pending;
-
-    badge.style.display =
-        pending > 0 ? "grid" : "none";
+    badge.style.display = pending > 0 ? "grid" : "none";
 }
 
-    
-</script> 
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+function escapeHTML(str) { return escapeHtml(str); }
+
+/* =========================================================
+   HOANGKUN SECURITY SYSTEM
+   CHỐNG F12 / CHUỘT PHẢI / DEVTOOLS / VIEW SOURCE
+   ========================================================= */
+
+(function () {
+
+    let warningCooldown = false;
+
+    /* =========================
+       THÔNG BÁO CẢNH BÁO
+    ========================= */
+    function securityWarning(message = "Thao tác này không được phép!") {
+
+        // Không spam popup liên tục
+        if (warningCooldown) return;
+
+        warningCooldown = true;
+
+        setTimeout(() => {
+            warningCooldown = false;
+        }, 1800);
+
+        if (typeof Swal !== "undefined") {
+
+            Swal.fire({
+                icon: "warning",
+                title: "⚠️ CẢNH BÁO BẢO MẬT",
+                html: `
+                    <div style="
+                        text-align:center;
+                        color:#64748b;
+                        font-size:14px;
+                        line-height:1.7;
+                    ">
+                        <div style="
+                            width:65px;
+                            height:65px;
+                            margin:0 auto 15px;
+                            border-radius:50%;
+                            background:linear-gradient(135deg,#fff7ed,#ffedd5);
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            font-size:30px;
+                        ">
+                            🔒
+                        </div>
+
+                        <b style="color:#ef4444;font-size:15px;">
+                            ${message}
+                        </b>
+
+                        <p style="margin-top:8px;">
+                            Vui lòng không cố gắng truy cập
+                            công cụ dành cho nhà phát triển.
+                        </p>
+
+                        <div style="
+                            margin-top:14px;
+                            padding:10px 12px;
+                            background:#f8fafc;
+                            border:1px solid #e2e8f0;
+                            border-radius:10px;
+                            font-size:12px;
+                        ">
+                            🛡️ HoangKun Store Security
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: "Đã hiểu",
+                confirmButtonColor: "#1677ff",
+                width: "420px",
+                allowOutsideClick: true,
+                allowEscapeKey: true,
+                backdrop: "rgba(15,23,42,.78)",
+                showClass: {
+                    popup: `
+                        animate__animated
+                        animate__fadeInDown
+                    `
+                }
+            });
+
+        } else {
+            alert("⚠️ CẢNH BÁO BẢO MẬT\n\n" + message);
+        }
+    }
+
+
+    /* =========================
+       CẤM CHUỘT PHẢI
+    ========================= */
+    document.addEventListener("contextmenu", function (e) {
+
+        e.preventDefault();
+
+        securityWarning(
+            "Chuột phải đã bị vô hiệu hóa trên trang này!"
+        );
+
+        return false;
+
+    }, true);
+
+
+    /* =========================
+       CẤM F12
+    ========================= */
+    document.addEventListener("keydown", function (e) {
+
+        const key = e.key.toLowerCase();
+
+        /* F12 */
+        if (e.key === "F12" || e.keyCode === 123) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            securityWarning(
+                "Phím F12 đã bị vô hiệu hóa!"
+            );
+
+            return false;
+        }
+
+
+        /* =========================
+           CTRL + SHIFT + I
+           DEVTOOLS
+        ========================= */
+        if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            key === "i"
+        ) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            securityWarning(
+                "Không được phép mở Developer Tools!"
+            );
+
+            return false;
+        }
+
+
+        /* =========================
+           CTRL + SHIFT + J
+           CONSOLE
+        ========================= */
+        if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            key === "j"
+        ) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            securityWarning(
+                "Không được phép mở Console!"
+            );
+
+            return false;
+        }
+
+
+        /* =========================
+           CTRL + SHIFT + C
+           INSPECT ELEMENT
+        ========================= */
+        if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            key === "c"
+        ) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            securityWarning(
+                "Không được phép sử dụng Inspect Element!"
+            );
+
+            return false;
+        }
+
+
+        /* =========================
+           CTRL + U
+           VIEW SOURCE
+        ========================= */
+        if (
+            e.ctrlKey &&
+            key === "u"
+        ) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            securityWarning(
+                "Không được phép xem mã nguồn trực tiếp!"
+            );
+
+            return false;
+        }
+
+
+        /* =========================
+           CTRL + S
+           SAVE PAGE
+        ========================= */
+        if (
+            e.ctrlKey &&
+            key === "s"
+        ) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            securityWarning(
+                "Không được phép lưu trang trực tiếp!"
+            );
+
+            return false;
+        }
+
+
+        /* =========================
+           CTRL + P
+           IN / SAVE PDF
+        ========================= */
+        if (
+            e.ctrlKey &&
+            key === "p"
+        ) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            securityWarning(
+                "Chức năng này đã bị giới hạn!"
+            );
+
+            return false;
+        }
+
+    }, true);
+
+
+    /* =========================
+       CHẶN KÉO ẢNH
+    ========================= */
+    document.addEventListener("dragstart", function (e) {
+
+        if (
+            e.target &&
+            e.target.tagName === "IMG"
+        ) {
+            e.preventDefault();
+
+            securityWarning(
+                "Không được phép kéo hoặc sao chép hình ảnh!"
+            );
+
+            return false;
+        }
+
+    }, true);
+
+
+    /* =========================
+       CHẶN DOUBLE CLICK
+       TRÊN ẢNH
+    ========================= */
+    document.addEventListener("dblclick", function (e) {
+
+        if (
+            e.target &&
+            e.target.tagName === "IMG"
+        ) {
+            e.preventDefault();
+        }
+
+    }, true);
+
+
+    /* =========================
+       CHẶN COPY
+    ========================= */
+    document.addEventListener("copy", function (e) {
+
+        // Cho phép copy trong input/textarea
+        const target = e.target;
+
+        if (
+            target &&
+            (
+                target.tagName === "INPUT" ||
+                target.tagName === "TEXTAREA"
+            )
+        ) {
+            return;
+        }
+
+        e.preventDefault();
+
+        securityWarning(
+            "Không được phép sao chép nội dung trang!"
+        );
+
+    }, true);
+
+
+    /* =========================
+       CHẶN CUT
+    ========================= */
+    document.addEventListener("cut", function (e) {
+
+        const target = e.target;
+
+        if (
+            target &&
+            (
+                target.tagName === "INPUT" ||
+                target.tagName === "TEXTAREA"
+            )
+        ) {
+            return;
+        }
+
+        e.preventDefault();
+
+        securityWarning(
+            "Không được phép cắt nội dung trang!"
+        );
+
+    }, true);
+
+
+    /* =========================
+       CHẶN CHỌN TEXT
+       NHƯNG KHÔNG CHẶN INPUT
+    ========================= */
+    document.addEventListener("selectstart", function (e) {
+
+        const target = e.target;
+
+        if (
+            target &&
+            (
+                target.tagName === "INPUT" ||
+                target.tagName === "TEXTAREA" ||
+                target.tagName === "BUTTON"
+            )
+        ) {
+            return;
+        }
+
+        // Không cho bôi đen text trang
+        e.preventDefault();
+
+    }, true);
+
+
+    /* =========================
+       DEVTOOLS DETECTION
+       
+       Đây chỉ là lớp phát hiện phía client,
+       không phải bảo mật tuyệt đối.
+    ========================= */
+
+    let devtoolsShown = false;
+
+    function detectDevTools() {
+
+        const threshold = 160;
+
+        const widthDiff =
+            window.outerWidth - window.innerWidth;
+
+        const heightDiff =
+            window.outerHeight - window.innerHeight;
+
+        if (
+            widthDiff > threshold ||
+            heightDiff > threshold
+        ) {
+
+            if (!devtoolsShown) {
+
+                devtoolsShown = true;
+
+                securityWarning(
+                    "Phát hiện môi trường Developer Tools. Vui lòng đóng công cụ này!"
+                );
+
+            }
+
+        } else {
+
+            devtoolsShown = false;
+
+        }
+
+    }
+
+    setInterval(detectDevTools, 1200);
+
+
+    /* =========================
+       CHẶN MENU CHUỘT PHẢI
+       TRÊN TOÀN BỘ TRANG
+    ========================= */
+    window.oncontextmenu = function () {
+
+        securityWarning(
+            "Chuột phải đã bị vô hiệu hóa!"
+        );
+
+        return false;
+
+    };
+
+
+    /* =========================
+       BẢO VỆ KHI RỜI TRANG
+    ========================= */
+    window.addEventListener("beforeunload", function () {
+        // Không can thiệp nếu trình duyệt tự đóng/tab.
+    });
+
+
+    console.log(
+        "%c🛡️ HOANGKUN SECURITY SYSTEM",
+        "font-size:20px;font-weight:bold;color:#1677ff;"
+    );
+
+    console.log(
+        "%c⚠️ Khu vực này dành cho hệ thống.",
+        "font-size:14px;color:#ef4444;font-weight:bold;"
+    );
+
+})();
+</script>
 </body> 
 </html>
