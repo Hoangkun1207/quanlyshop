@@ -10,7 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"> 
     
-    <!-- Thêm Firebase SDK cho trang quản trị -->
+    <!-- Thêm Firebase SDK & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -44,7 +45,8 @@
         body { 
             background: var(--bg); 
             color: var(--text); 
-            min-height: 100vh; 
+            min-height: 100vh;
+            overflow-x: hidden;
         } 
         button, input, select { 
             font-family: inherit; 
@@ -53,7 +55,9 @@
         button { 
             border: 0; 
             cursor: pointer; 
+            background: transparent;
         } 
+        
         /* ========================= SIDEBAR ========================= */ 
         .sidebar { 
             position: fixed; 
@@ -66,6 +70,11 @@
             flex-direction: column; 
             box-shadow: 8px 0 30px rgba(10, 25, 50, .08); 
         } 
+        .sidebar.open {
+            transform: translateX(0) !important;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 10px 0 40px rgba(0,0,0,0.6);
+        }
         .brand { 
             height: 76px; 
             padding: 0 25px; 
@@ -74,7 +83,8 @@
             gap: 11px; 
             font-size: 18px; 
             font-weight: 800; 
-            border-bottom: 1px solid rgba(255,255,255,.05); 
+            border-bottom: 1px solid rgba(255,255,255,.05);
+            flex-shrink: 0;
         } 
         .brand-logo { 
             width: 36px; 
@@ -96,7 +106,12 @@
             flex: 1; 
             overflow-y: auto; 
             padding: 15px 0; 
+            scrollbar-width: thin;
+            scrollbar-color: #374151 transparent;
         } 
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #26344a; border-radius: 10px; }
+
         .sb-title { 
             padding: 15px 22px 8px; 
             color: #60708b; 
@@ -112,7 +127,6 @@
             min-height: 43px; 
             padding: 0 15px; 
             border-radius: 9px; 
-            background: transparent; 
             color: #b9c4d6; 
             display: flex; 
             align-items: center; 
@@ -152,8 +166,10 @@
         } 
         .sidebar-footer { 
             padding: 10px 0; 
-            border-top: 1px solid rgba(255,255,255,.05); 
+            border-top: 1px solid rgba(255,255,255,.05);
+            flex-shrink: 0;
         } 
+
         /* ========================= MAIN ========================= */ 
         .main { 
             margin-left: var(--sidebar); 
@@ -176,6 +192,8 @@
             align-items: center; 
             gap: 14px; 
         } 
+        .mobile-menu { display: none; border: none; cursor: pointer; flex-shrink: 0; }
+        
         .crumb { 
             display: flex; 
             align-items: center; 
@@ -184,14 +202,8 @@
             font-size: 13px; 
             font-weight: 600; 
         } 
-        .crumb i { 
-            font-size: 10px; 
-            color: #c4ccda; 
-        } 
-        .crumb .current { 
-            color: #172033; 
-            font-weight: 800; 
-        } 
+        .crumb i { font-size: 10px; color: #c4ccda; } 
+        .crumb .current { color: #172033; font-weight: 800; } 
         .search { 
             width: 290px; 
             height: 42px; 
@@ -209,6 +221,7 @@
             border: 0; 
             background: transparent; 
             font-size: 12px; 
+            color: var(--text);
         } 
         .shortcut { 
             font-size: 9px; 
@@ -228,7 +241,9 @@
             border-radius: 50%; 
             color: #526074; 
             font-size: 14px; 
-            transition: .2s; 
+            transition: .2s;
+            display: grid;
+            place-items: center;
         } 
         .icon-btn:hover { 
             color: var(--primary); 
@@ -246,10 +261,9 @@
             border: 2px solid #fff; 
             display: none;
         } 
+
         /* USER */ 
-        .user-dropdown { 
-            position: relative; 
-        } 
+        .user-dropdown { position: relative; } 
         .user { 
             height: 44px; 
             padding: 4px 10px 4px 4px; 
@@ -259,7 +273,9 @@
             display: flex; 
             align-items: center; 
             gap: 9px; 
+            transition: .2s;
         } 
+        .user:hover { background: #f8fafc; }
         .avatar { 
             width: 35px; 
             height: 35px; 
@@ -270,14 +286,9 @@
             color: #1677ff; 
             font-weight: 800; 
         } 
-        .user-name { 
-            font-size: 12px; 
-            font-weight: 800; 
-        } 
-        .user i { 
-            font-size: 9px; 
-            color: #9ba6b8; 
-        } 
+        .user-name { font-size: 12px; font-weight: 800; color: var(--text); } 
+        .user i { font-size: 9px; color: #9ba6b8; margin-left: 2px; } 
+
         .user-menu { 
             position: absolute; 
             right: 0; 
@@ -294,30 +305,11 @@
             transition: .2s; 
             z-index: 3000; 
         } 
-        .user-menu.show { 
-            opacity: 1; 
-            visibility: visible; 
-            transform: translateY(0); 
-        } 
-        .user-menu-header { 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            padding: 8px; 
-        } 
-        .user-menu-header strong { 
-            display: block; 
-            font-size: 13px; 
-        } 
-        .user-menu-header span { 
-            font-size: 10px; 
-            color: #94a0b2; 
-        } 
-        .user-menu-line { 
-            height: 1px; 
-            background: #edf1f6; 
-            margin: 5px 0; 
-        } 
+        .user-menu.show { opacity: 1; visibility: visible; transform: translateY(0); } 
+        .user-menu-header { display: flex; align-items: center; gap: 10px; padding: 8px; } 
+        .user-menu-header strong { display: block; font-size: 13px; color: var(--text); } 
+        .user-menu-header span { font-size: 10px; color: #94a0b2; margin-top: 2px; } 
+        .user-menu-line { height: 1px; background: #edf1f6; margin: 5px 0; } 
         .user-menu button { 
             width: 100%; 
             height: 38px; 
@@ -331,32 +323,22 @@
             font-size: 12px; 
             font-weight: 700; 
             text-align: left; 
+            transition: .2s;
         } 
-        .user-menu button:hover { 
-            background: #eef6ff; 
-            color: var(--primary); 
-        } 
-        .logout-item { 
-            color: #ef4444 !important; 
-        } 
+        .user-menu button:hover { background: #eef6ff; color: var(--primary); } 
+        .logout-item { color: #ef4444 !important; } 
+        .logout-item:hover { background: #fff1f1 !important; }
+
         /* ========================= CONTENT ========================= */ 
         .content { 
             padding: 30px; 
             max-width: 1500px; 
             margin: auto; 
         } 
-        .page-title { 
-            margin-bottom: 22px; 
-        } 
-        .page-title h1 { 
-            font-size: 28px; 
-            font-weight: 800; 
-        } 
-        .page-title p { 
-            margin-top: 5px; 
-            color: var(--muted); 
-            font-size: 12px; 
-        } 
+        .page-title { margin-bottom: 22px; } 
+        .page-title h1 { font-size: 28px; font-weight: 800; color: var(--text); } 
+        .page-title p { margin-top: 5px; color: var(--muted); font-size: 12px; } 
+
         /* ========================= DASHBOARD CARDS ========================= */ 
         .stats-grid { 
             display: grid; 
@@ -378,581 +360,231 @@
             transform: translateY(-3px); 
             box-shadow: 0 14px 30px rgba(31,51,73,.08); 
         } 
-        .stat-top { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        } 
+        .stat-top { display: flex; justify-content: space-between; align-items: center; } 
         .stat-icon { 
-            width: 43px; 
-            height: 43px; 
-            border-radius: 12px; 
-            display: grid; 
-            place-items: center; 
-            font-size: 17px; 
+            width: 43px; height: 43px; border-radius: 12px; display: grid; 
+            place-items: center; font-size: 17px; 
         } 
         .blue { background: #eef5ff; color: #1677ff; } 
         .green { background: #eafaf5; color: #10b981; } 
         .yellow { background: #fff8e8; color: #f59e0b; } 
         .purple { background: #f3efff; color: #8b5cf6; } 
-        .stat-label { 
-            margin-top: 15px; 
-            color: #8a96aa; 
-            font-size: 11px; 
-            font-weight: 700; 
-        } 
-        .stat-value { 
-            margin-top: 4px; 
-            font-size: 24px; 
-            font-weight: 800; 
-        } 
-        .stat-desc { 
-            margin-top: 4px; 
-            color: #a1aabd; 
-            font-size: 9px; 
-        } 
+        
+        .stat-label { margin-top: 15px; color: #8a96aa; font-size: 11px; font-weight: 700; } 
+        .stat-value { margin-top: 4px; font-size: 24px; font-weight: 800; color: var(--text); } 
+        .stat-desc { margin-top: 4px; color: #a1aabd; font-size: 9px; } 
+
         /* ========================= LAYOUT ========================= */ 
-        .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: 1.35fr .65fr; 
-            gap: 18px; 
-        } 
+        .dashboard-grid { display: grid; grid-template-columns: 1.35fr .65fr; gap: 18px; } 
         .card { 
-            background: #fff; 
-            border: 1px solid var(--border); 
-            border-radius: 18px; 
-            box-shadow: 0 7px 25px rgba(31,51,73,.04); 
+            background: #fff; border: 1px solid var(--border); border-radius: 18px; 
+            box-shadow: 0 7px 25px rgba(31,51,73,.04); margin-bottom: 20px;
         } 
         .card-head { 
-            min-height: 64px; 
-            padding: 0 20px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            border-bottom: 1px solid #edf1f6; 
+            min-height: 64px; padding: 0 20px; display: flex; align-items: center; 
+            justify-content: space-between; border-bottom: 1px solid #edf1f6; 
         } 
-        .card-head h2 { 
-            font-size: 14px; 
-            font-weight: 800; 
-        } 
-        .card-head p { 
-            margin-top: 2px; 
-            color: #9aa6b8; 
-            font-size: 9px; 
-        } 
+        .card-head h2 { font-size: 14px; font-weight: 800; color: var(--text); } 
+        .card-head p { margin-top: 2px; color: #9aa6b8; font-size: 9px; } 
         .card-head button { 
-            background: #eef5ff; 
-            color: #1677ff; 
-            padding: 7px 10px; 
-            border-radius: 8px; 
-            font-size: 9px; 
-            font-weight: 800; 
+            background: #eef5ff; color: #1677ff; padding: 7px 10px; border-radius: 8px; 
+            font-size: 9px; font-weight: 800; transition: .2s;
         } 
+        .card-head button:hover { background: #dceaff; }
+
         /* ========================= ORDER ========================= */ 
-        .order-list { 
-            padding: 5px 20px 10px; 
-        } 
+        .order-list { padding: 5px 20px 10px; } 
         .order-item { 
-            display: flex; 
-            align-items: center; 
-            gap: 13px; 
-            padding: 15px 0; 
+            display: flex; align-items: center; gap: 13px; padding: 15px 0; 
             border-bottom: 1px solid #f0f3f7; 
         } 
         .order-item:last-child { border-bottom: 0; } 
         .order-icon { 
-            width: 40px; 
-            height: 40px; 
-            flex: 0 0 40px; 
-            border-radius: 11px; 
-            display: grid; 
-            place-items: center; 
-            background: #f1f6ff; 
-            color: #1677ff; 
+            width: 40px; height: 40px; flex: 0 0 40px; border-radius: 11px; 
+            display: grid; place-items: center; background: #f1f6ff; color: #1677ff; 
         } 
-        .order-info { 
-            min-width: 0; 
-            flex: 1; 
-        } 
-        .order-info strong { 
-            display: block; 
-            font-size: 11px; 
-            font-weight: 800; 
-        } 
-        .order-info span { 
-            display: block; 
-            margin-top: 3px; 
-            color: #99a4b7; 
-            font-size: 9px; 
-        } 
-        .order-price { 
-            text-align: right; 
-        } 
-        .order-price strong { 
-            display: block; 
-            color: #1677ff; 
-            font-size: 11px; 
-        } 
-        .order-price span { 
-            display: block; 
-            margin-top: 4px; 
-            color: #99a4b7; 
-            font-size: 8px; 
-        } 
-        .status { 
-            padding: 5px 8px; 
-            border-radius: 7px; 
-            font-size: 8px; 
-            font-weight: 800; 
-            white-space: nowrap; 
-        } 
+        .order-info { min-width: 0; flex: 1; } 
+        .order-info strong { display: block; font-size: 11px; font-weight: 800; color: var(--text); } 
+        .order-info span { display: block; margin-top: 3px; color: #99a4b7; font-size: 9px; } 
+        .order-price { text-align: right; } 
+        .order-price strong { display: block; color: #1677ff; font-size: 11px; } 
+        .order-price span { display: block; margin-top: 4px; color: #99a4b7; font-size: 8px; } 
+        
+        .status { padding: 5px 8px; border-radius: 7px; font-size: 8px; font-weight: 800; white-space: nowrap; } 
         .status.new { background: #fff4df; color: #d97706; } 
         .status.processing { background: #eef5ff; color: #1677ff; } 
         .status.done { background: #eafaf5; color: #059669; } 
         .status.cancel { background: #fff0f0; color: #dc2626; } 
+
         /* ========================= NOTIFICATION ========================= */ 
-        .notification-list { 
-            padding: 8px 20px; 
-        } 
-        .notification { 
-            display: flex; 
-            gap: 11px; 
-            padding: 13px 0; 
-            border-bottom: 1px solid #f0f3f7; 
-        } 
+        .notification-list { padding: 8px 20px; } 
+        .notification { display: flex; gap: 11px; padding: 13px 0; border-bottom: 1px solid #f0f3f7; } 
         .notification:last-child { border-bottom: 0; } 
         .notification-icon { 
-            width: 36px; 
-            height: 36px; 
-            flex: 0 0 36px; 
-            border-radius: 10px; 
-            display: grid; 
-            place-items: center; 
-            font-size: 13px; 
+            width: 36px; height: 36px; flex: 0 0 36px; border-radius: 10px; 
+            display: grid; place-items: center; font-size: 13px; 
         } 
         .notification-content { flex: 1; } 
-        .notification-content strong { 
-            font-size: 10px; 
-            display: block; 
-        } 
-        .notification-content p { 
-            margin-top: 3px; 
-            color: #8995a9; 
-            font-size: 9px; 
-            line-height: 1.5; 
-        } 
-        .notification-time { 
-            margin-top: 4px; 
-            color: #b0b8c6; 
-            font-size: 8px; 
-        } 
+        .notification-content strong { font-size: 10px; display: block; color: var(--text); } 
+        .notification-content p { margin-top: 3px; color: #8995a9; font-size: 9px; line-height: 1.5; } 
+        .notification-time { margin-top: 4px; color: #b0b8c6; font-size: 8px; } 
+
         /* ========================= MANAGEMENT ========================= */ 
         .section { margin-top: 20px; } 
-        .management-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 18px; 
-        } 
+        .management-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; } 
         .balance-box { padding: 20px; } 
         .balance-user { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            padding-bottom: 16px; 
+            display: flex; align-items: center; gap: 12px; padding-bottom: 16px; 
             border-bottom: 1px solid #edf1f6; 
         } 
         .balance-avatar { 
-            width: 44px; 
-            height: 44px; 
-            border-radius: 50%; 
-            background: linear-gradient(135deg, #d9edff, #b8dcff); 
-            display: grid; 
-            place-items: center; 
-            color: #1677ff; 
-            font-weight: 800; 
+            width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #d9edff, #b8dcff); 
+            display: grid; place-items: center; color: #1677ff; font-weight: 800; 
         } 
-        .balance-user strong { 
-            display: block; 
-            font-size: 12px; 
-        } 
-        .balance-user span { 
-            display: block; 
-            margin-top: 3px; 
-            color: #9aa6b8; 
-            font-size: 9px; 
-        } 
+        .balance-user strong { display: block; font-size: 12px; color: var(--text); } 
+        .balance-user span { display: block; margin-top: 3px; color: #9aa6b8; font-size: 9px; } 
         .balance-number { padding: 18px 0; } 
-        .balance-number span { 
-            color: #99a4b7; 
-            font-size: 10px; 
-        } 
-        .balance-number strong { 
-            display: block; 
-            margin-top: 3px; 
-            color: #1677ff; 
-            font-size: 27px; 
-        } 
-        .balance-actions { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 9px; 
-        } 
-        .balance-actions button { 
-            height: 39px; 
-            border-radius: 9px; 
-            font-size: 10px; 
-            font-weight: 800; 
-        } 
-        .add-btn { background: #eafaf5; color: #059669; } 
-        .minus-btn { background: #fff0f0; color: #dc2626; } 
+        .balance-number span { color: #99a4b7; font-size: 10px; } 
+        .balance-number strong { display: block; margin-top: 3px; color: #1677ff; font-size: 27px; } 
+        
+        .balance-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; } 
+        .balance-actions button { height: 39px; border-radius: 9px; font-size: 10px; font-weight: 800; transition: .2s; } 
+        .add-btn { background: #eafaf5; color: #059669; } .add-btn:hover { background: #d1fae5; }
+        .minus-btn { background: #fff0f0; color: #dc2626; } .minus-btn:hover { background: #ffe2ea; }
+
         /* ========================= TABLE ========================= */ 
-        .table-wrap { overflow-x: auto; } 
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-        } 
-        th, td { 
-            padding: 13px 20px; 
-            text-align: left; 
-            border-bottom: 1px solid #f0f3f7; 
-            white-space: nowrap; 
-        } 
-        th { 
-            color: #8b97aa; 
-            font-size: 9px; 
-            text-transform: uppercase; 
-            letter-spacing: .5px; 
-        } 
-        td { 
-            font-size: 10px; 
-            font-weight: 600; 
-        } 
-        .customer { 
-            display: flex; 
-            align-items: center; 
-            gap: 9px; 
-        } 
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; } 
+        table { width: 100%; border-collapse: collapse; min-width: 700px; } 
+        th, td { padding: 13px 20px; text-align: left; border-bottom: 1px solid #f0f3f7; white-space: nowrap; } 
+        th { color: #8b97aa; font-size: 9px; text-transform: uppercase; letter-spacing: .5px; } 
+        td { font-size: 10px; font-weight: 600; color: #526074; } 
+        
+        .customer { display: flex; align-items: center; gap: 9px; } 
         .customer-avatar { 
-            width: 31px; 
-            height: 31px; 
-            border-radius: 50%; 
-            background: #eef5ff; 
-            color: #1677ff; 
-            display: grid; 
-            place-items: center; 
-            font-size: 10px; 
-            font-weight: 800; 
+            width: 31px; height: 31px; border-radius: 50%; background: #eef5ff; color: #1677ff; 
+            display: grid; place-items: center; font-size: 10px; font-weight: 800; 
         } 
-        .customer-name strong { 
-            display: block; 
-            font-size: 10px; 
-        } 
-        .customer-name span { 
-            display: block; 
-            margin-top: 2px; 
-            color: #a0aabc; 
-            font-size: 8px; 
-        } 
-        .table-actions { 
-            display: flex; 
-            gap: 5px; 
-        } 
+        .customer-name strong { display: block; font-size: 10px; color: var(--text); } 
+        .customer-name span { display: block; margin-top: 2px; color: #a0aabc; font-size: 8px; } 
+        
+        .table-actions { display: flex; gap: 5px; } 
         .table-actions button { 
-            width: 28px; 
-            height: 28px; 
-            border-radius: 7px; 
-            background: #f3f6fb; 
-            color: #68758a; 
+            width: 28px; height: 28px; border-radius: 7px; background: #f3f6fb; 
+            color: #68758a; display: grid; place-items: center; transition: .2s;
         } 
-        .table-actions button:hover { 
-            background: #eef5ff; 
-            color: #1677ff; 
-        } 
+        .table-actions button:hover { background: #eef5ff; color: #1677ff; } 
+        
+        .card-code { color: #1677ff; font-weight: 800; letter-spacing: .5px; }
+        .card-serial { color: #526074; font-weight: 700; }
+        .card-amount { color: #059669; font-weight: 800; }
+        .card-pending { background: #fff8e8; color: #d97706; }
+        .card-approved { background: #eafaf5; color: #059669; }
+        .card-rejected { background: #fff0f0; color: #dc2626; }
+        
+        .card-actions { display: flex; gap: 5px; }
+        .card-actions button { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; transition: .2s;}
+        .card-approve { background: #eafaf5; color: #059669; } .card-approve:hover { background: #d8f7eb; }
+        .card-reject { background: #fff0f0; color: #dc2626; } .card-reject:hover { background: #ffe0e0; }
+        .card-view { background: #eef5ff; color: #1677ff; } .card-view:hover { background: #dceaff; }
+
         /* ========================= MODAL ========================= */ 
         .modal { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(10,20,35,.5); 
-            backdrop-filter: blur(5px); 
-            display: none; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px; 
-            z-index: 5000; 
+            position: fixed; inset: 0; background: rgba(10,20,35,.5); backdrop-filter: blur(5px); 
+            display: none; align-items: center; justify-content: center; padding: 20px; z-index: 5000; 
         } 
         .modal.show { display: flex; } 
         .modal-box { 
-            width: 100%; 
-            max-width: 430px; 
-            background: #fff; 
-            border-radius: 20px; 
-            box-shadow: 0 25px 70px rgba(0,0,0,.2); 
-            overflow: hidden; 
-            animation: modalIn .25s ease; 
+            width: 100%; max-width: 430px; background: #fff; border-radius: 20px; 
+            box-shadow: 0 25px 70px rgba(0,0,0,.2); overflow: hidden; animation: modalIn .25s ease; 
         } 
         @keyframes modalIn { 
             from { opacity: 0; transform: translateY(15px) scale(.97); } 
             to { opacity: 1; transform: translateY(0) scale(1); } 
         } 
         .modal-head { 
-            padding: 20px; 
-            border-bottom: 1px solid #edf1f6; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+            padding: 20px; border-bottom: 1px solid #edf1f6; display: flex; 
+            justify-content: space-between; align-items: center; 
         } 
-        .modal-head h3 { font-size: 15px; } 
+        .modal-head h3 { font-size: 15px; color: var(--text); } 
         .close-modal { 
-            width: 32px; 
-            height: 32px; 
-            border-radius: 8px; 
-            background: #f3f6fb; 
-            color: #69758a; 
+            width: 32px; height: 32px; border-radius: 8px; background: #f3f6fb; 
+            color: #69758a; display: grid; place-items: center; transition: .2s;
         } 
-        .modal-body { padding: 20px; } 
+        .close-modal:hover { background: #ffe2ea; color: #ef4444; }
+        .modal-body { padding: 20px; max-height: 80vh; overflow-y: auto; } 
+        
         .form-group { margin-bottom: 15px; } 
-        .form-group label { 
-            display: block; 
-            margin-bottom: 6px; 
-            color: #667389; 
-            font-size: 10px; 
-            font-weight: 800; 
-        } 
+        .form-group label { display: block; margin-bottom: 6px; color: #667389; font-size: 10px; font-weight: 800; } 
         .form-group input, .form-group select { 
-            width: 100%; 
-            height: 42px; 
-            border: 1px solid #e3e9f2; 
-            border-radius: 10px; 
-            padding: 0 12px; 
-            background: #fff; 
-            font-size: 11px; 
+            width: 100%; height: 42px; border: 1px solid #e3e9f2; border-radius: 10px; 
+            padding: 0 12px; background: #fff; font-size: 11px; color: var(--text);
         } 
-        .form-group input:focus, .form-group select:focus { 
-            border-color: #8bbcff; 
-            box-shadow: 0 0 0 3px rgba(22,119,255,.08); 
-        } 
+        .form-group input:focus, .form-group select:focus { border-color: #8bbcff; box-shadow: 0 0 0 3px rgba(22,119,255,.08); } 
         .modal-submit { 
-            width: 100%; 
-            height: 42px; 
-            border-radius: 10px; 
-            background: #1677ff; 
-            color: #fff; 
-            font-size: 11px; 
-            font-weight: 800; 
+            width: 100%; height: 42px; border-radius: 10px; background: #1677ff; 
+            color: #fff; font-size: 11px; font-weight: 800; transition: .2s;
         } 
+        .modal-submit:hover { background: #0f5ed7; }
+
         /* ========================= TOAST ========================= */ 
         .toast-container { 
-            position: fixed; 
-            right: 22px; 
-            bottom: 22px; 
-            z-index: 9000; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
+            position: fixed; right: 22px; bottom: 22px; z-index: 9000; 
+            display: flex; flex-direction: column; gap: 10px; 
         } 
         .toast { 
-            min-width: 290px; 
-            padding: 14px 15px; 
-            border-radius: 13px; 
-            background: #fff; 
-            border: 1px solid var(--border); 
-            box-shadow: 0 15px 40px rgba(20,40,80,.15); 
-            display: flex; 
-            align-items: center; 
-            gap: 11px; 
-            animation: toastIn .3s ease; 
+            min-width: 290px; padding: 14px 15px; border-radius: 13px; background: #fff; 
+            border: 1px solid var(--border); box-shadow: 0 15px 40px rgba(20,40,80,.15); 
+            display: flex; align-items: center; gap: 11px; animation: toastIn .3s ease; 
         } 
         .toast-icon { 
-            width: 34px; 
-            height: 34px; 
-            border-radius: 9px; 
-            background: #eafaf5; 
-            color: #059669; 
-            display: grid; 
-            place-items: center; 
+            width: 34px; height: 34px; border-radius: 9px; background: #eafaf5; color: #059669; 
+            display: grid; place-items: center; 
         } 
-        .toast strong { 
-            display: block; 
-            font-size: 10px; 
-        } 
-        .toast span { 
-            display: block; 
-            margin-top: 3px; 
-            color: #8a96aa; 
-            font-size: 9px; 
-        } 
+        .toast strong { display: block; font-size: 10px; color: var(--text); } 
+        .toast span { display: block; margin-top: 3px; color: #8a96aa; font-size: 9px; } 
         @keyframes toastIn { 
             from { opacity: 0; transform: translateX(20px); } 
             to { opacity: 1; transform: translateX(0); } 
         } 
-        /* ========================= MOBILE ========================= */ 
-        .mobile-menu { display: none; } 
-        @media(max-width:1100px) { 
-            .stats-grid { grid-template-columns: repeat(2,1fr); } 
-            .dashboard-grid { grid-template-columns: 1fr; } 
-            .management-grid { grid-template-columns: 1fr; } 
-        } 
-        @media(max-width:760px) { 
-            :root { --sidebar: 0px; } 
-            .sidebar { 
-                transform: translateX(-100%); 
-                transition: .25s; 
-            } 
-            .sidebar.open { transform: translateX(0); } 
-            .main { margin-left: 0; } 
-            .topbar { padding: 0 15px; } 
-            .mobile-menu { 
-                display: grid; 
-                place-items: center; 
-                width: 39px; 
-                height: 39px; 
-                border-radius: 10px; 
-                background: #eef5ff; 
-                color: #1677ff; 
-            } 
-            .crumb { display: none; } 
-            .search { width: 190px; } 
-            .content { padding: 15px; } 
-            .page-title h1 { font-size: 23px; } 
-            .user-name { display: none; } 
-        } 
-        @media(max-width:560px) { 
-            .stats-grid { 
-                grid-template-columns: 1fr 1fr; 
-                gap: 10px; 
-            } 
-            .stat-card { padding: 14px; } 
-            .stat-value { font-size: 20px; } 
-            .search { display: none; } 
-            .top-right { gap: 7px; } 
-            .icon-btn { width: 36px; height: 36px; } 
-            .order-item { align-items: flex-start; } 
-            .order-price { display: none; } 
-            .status { margin-left: auto; } 
-        } 
 
         /* ========================= MOBILE & RESPONSIVE ========================= */ 
-        .mobile-menu { display: none; border: none; cursor: pointer; } 
-        
         @media(max-width: 1200px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .dashboard-grid { grid-template-columns: 1fr; }
-            .form-grid { grid-template-columns: 1fr; }
+            .management-grid { grid-template-columns: 1fr; }
         }
 
         @media(max-width: 800px) {
             :root { --sidebar: 0px; }
             
             /* Sidebar trượt từ trái sang */
-            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
-            .sidebar.open { transform: translateX(0) !important; }
-            
-            .main { margin-left: 0; }
+            .sidebar { width: 260px !important; transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: none; }
+            .main { margin-left: 0; width: 100%; }
             .topbar { padding: 0 15px; }
             
             /* Nút 3 gạch */
             .mobile-menu {
-                display: grid;
-                place-items: center;
-                width: 40px;
-                height: 40px;
-                border-radius: 10px;
-                background: #eef5ff;
-                color: #1677ff;
-                margin-right: 15px;
-                font-size: 18px;
+                display: grid; place-items: center; width: 40px; height: 40px;
+                border-radius: 10px; background: #eef5ff; color: #1677ff; margin-right: 15px; font-size: 18px;
             }
             
-            .crumb { display: none; } /* Ẩn breadcrumb cho gọn */
+            .crumb { display: none; } 
+            .search { width: 190px; }
             .content { padding: 20px 15px; }
             
-            /* Bảng cuộn ngang mượt mà */
-            .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            table { min-width: 700px; } 
-            
             /* User Info */
-            .user-box span { display: none; }
-            .user-box { padding: 4px; border-radius: 50%; border: none; background: transparent; }
+            .user-name { display: none; }
+            .user i { display: none; }
+            .user { padding: 4px; border-radius: 50%; border: none; background: transparent; }
         }
         
-        @media(max-width: 500px) {
-            .stats-grid { grid-template-columns: 1fr; gap: 15px; }
-            .action-btns { flex-wrap: wrap; }
+        @media(max-width: 560px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 15px; }
+            .stat-value { font-size: 20px; }
+            .search { display: none; }
             .modal-box { margin: 15px; width: auto; max-width: calc(100vw - 30px); }
         }
-
-        /* ========================= CARD MANAGEMENT ========================= */
-
-.card-code {
-    color: #1677ff;
-    font-weight: 800;
-    letter-spacing: .5px;
-}
-
-.card-serial {
-    color: #526074;
-    font-weight: 700;
-}
-
-.card-amount {
-    color: #059669;
-    font-weight: 800;
-}
-
-.card-pending {
-    background: #fff8e8;
-    color: #d97706;
-}
-
-.card-approved {
-    background: #eafaf5;
-    color: #059669;
-}
-
-.card-rejected {
-    background: #fff0f0;
-    color: #dc2626;
-}
-
-.card-actions {
-    display: flex;
-    gap: 5px;
-}
-
-.card-actions button {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-}
-
-.card-approve {
-    background: #eafaf5;
-    color: #059669;
-}
-
-.card-approve:hover {
-    background: #d8f7eb;
-}
-
-.card-reject {
-    background: #fff0f0;
-    color: #dc2626;
-}
-
-.card-reject:hover {
-    background: #ffe0e0;
-}
-
-.card-view {
-    background: #eef5ff;
-    color: #1677ff;
-}
-
-.card-view:hover {
-    background: #dceaff;
-}
     </style> 
 </head> 
 <body> 
@@ -960,59 +592,45 @@
 <!-- ========================= SIDEBAR ========================= --> 
 <aside class="sidebar" id="sidebar"> 
     <div class="brand"> 
-        <div class="brand-logo"> 
-            <i class="fa-solid fa-bolt"></i> 
-        </div> 
-        <div> 
-            HOANGKUN 
-            <small>STORE MANAGEMENT</small> 
-        </div> 
+        <div class="brand-logo"><i class="fa-solid fa-bolt"></i></div> 
+        <div>HOANGKUN<small>STORE MANAGEMENT</small></div> 
     </div> 
     <div class="sidebar-scroll"> 
         <div class="sb-title">Tổng quan</div> 
         <button class="sb-mi active" onclick="showSection('dashboard', this)"> 
-            <span class="sb-icon"><i class="fa-solid fa-chart-pie"></i></span> 
-            Dashboard 
+            <span class="sb-icon"><i class="fa-solid fa-chart-pie"></i></span> Dashboard 
         </button> 
         <button class="sb-mi" onclick="showSection('orders', this)"> 
-            <span class="sb-icon"><i class="fa-solid fa-box"></i></span> 
-            Đơn hàng 
-            <span class="sb-badge" id="orderBadge">0</span> 
+            <span class="sb-icon"><i class="fa-solid fa-box"></i></span> Đơn hàng 
+            <span class="sb-badge" id="orderBadge" style="display:none;">0</span> 
         </button> 
         <button class="sb-mi" onclick="showSection('notifications', this)"> 
-            <span class="sb-icon"><i class="fa-regular fa-bell"></i></span> 
-            Thông báo 
+            <span class="sb-icon"><i class="fa-regular fa-bell"></i></span> Thông báo 
         </button> 
+        
         <div class="sb-title">Khách hàng</div> 
         <button class="sb-mi" onclick="showSection('coins', this)"> 
-            <span class="sb-icon"><i class="fa-solid fa-coins"></i></span> 
-            Quản lý xu 
+            <span class="sb-icon"><i class="fa-solid fa-coins"></i></span> Quản lý xu 
         </button> 
-        
         <button class="sb-mi" onclick="showSection('cards', this)"> 
-        <span class="sb-icon"><i class="fa-solid fa-credit-card"></i></span> 
-        Quản lý thẻ cào
-        <span class="sb-badge" id="cardBadge">0</span>
+            <span class="sb-icon"><i class="fa-solid fa-credit-card"></i></span> Quản lý thẻ cào
+            <span class="sb-badge" id="cardBadge" style="display:none;">0</span>
         </button>
-        
         <button class="sb-mi" onclick="showSection('customers', this)"> 
-            <span class="sb-icon"><i class="fa-solid fa-users"></i></span> 
-            Tài khoản khách 
+            <span class="sb-icon"><i class="fa-solid fa-users"></i></span> Tài khoản khách 
         </button> 
+        
         <div class="sb-title">Hệ thống</div> 
         <button class="sb-mi" onclick="showSection('security', this)"> 
-            <span class="sb-icon"><i class="fa-solid fa-shield-halved"></i></span> 
-            Bảo mật tài khoản 
+            <span class="sb-icon"><i class="fa-solid fa-shield-halved"></i></span> Bảo mật tài khoản 
         </button> 
         <button class="sb-mi" onclick="showToast('Khu vực cài đặt đang được phát triển')"> 
-            <span class="sb-icon"><i class="fa-solid fa-gear"></i></span> 
-            Cài đặt 
+            <span class="sb-icon"><i class="fa-solid fa-gear"></i></span> Cài đặt 
         </button> 
     </div> 
     <div class="sidebar-footer"> 
         <button class="sb-mi" onclick="logout()" style="color:#ff6670"> 
-            <span class="sb-icon"><i class="fa-solid fa-right-from-bracket"></i></span> 
-            Đăng xuất 
+            <span class="sb-icon"><i class="fa-solid fa-right-from-bracket"></i></span> Đăng xuất 
         </button> 
     </div> 
 </aside> 
@@ -1021,13 +639,9 @@
 <main class="main"> 
     <header class="topbar"> 
         <div class="top-left"> 
-            <button class="mobile-menu" onclick="toggleSidebar()"> 
-                <i class="fa-solid fa-bars"></i> 
-            </button> 
+            <button class="mobile-menu" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button> 
             <div class="crumb"> 
-                <span>HoangKun Store</span> 
-                <i class="fa-solid fa-chevron-right"></i> 
-                <span class="current" id="breadcrumb">Dashboard</span> 
+                <span>HoangKun Store</span> <i class="fa-solid fa-chevron-right"></i> <span class="current" id="breadcrumb">Dashboard</span> 
             </div> 
             <div class="search"> 
                 <i class="fa-solid fa-magnifying-glass"></i> 
@@ -1055,16 +669,10 @@
                         </div> 
                     </div> 
                     <div class="user-menu-line"></div> 
-                    <button onclick="showToast('Thông tin quản trị viên')"> 
-                        <i class="fa-regular fa-user"></i> Hồ sơ quản trị 
-                    </button> 
-                    <button onclick="showToast('Cài đặt hệ thống')"> 
-                        <i class="fa-solid fa-gear"></i> Cài đặt 
-                    </button> 
+                    <button onclick="showToast('Thông tin quản trị viên')"><i class="fa-regular fa-user"></i> Hồ sơ quản trị</button> 
+                    <button onclick="showToast('Cài đặt hệ thống')"><i class="fa-solid fa-gear"></i> Cài đặt</button> 
                     <div class="user-menu-line"></div> 
-                    <button class="logout-item" onclick="logout()"> 
-                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất 
-                    </button> 
+                    <button class="logout-item" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button> 
                 </div> 
             </div> 
         </div> 
@@ -1139,76 +747,6 @@
                     <div class="notification-list" id="notificationList"></div> 
                 </div> 
             </div> 
-
-            <!-- COINS --> 
-            <div class="section"> 
-                <div class="management-grid"> 
-                    <div class="card"> 
-                        <div class="card-head"> 
-                            <div> 
-                                <h2>🪙 Quản lý xu nhanh</h2> 
-                                <p>Cộng hoặc trừ xu cho khách</p> 
-                            </div> 
-                        </div> 
-                        <div class="balance-box"> 
-                            <div class="balance-user"> 
-                                <div class="balance-avatar"><i class="fa-solid fa-user"></i></div> 
-                                <div> 
-                                    <strong id="quickUserName">Chưa có khách hàng</strong> 
-                                    <span>Vui lòng thêm khách hàng</span> 
-                                </div> 
-                            </div> 
-                            <div class="balance-number"> 
-                                <span>Số dư hiện tại</span> 
-                                <strong id="demoBalance">0 xu</strong> 
-                            </div> 
-                            <div class="balance-actions"> 
-                                <button class="add-btn" onclick="openCoinModal('add')"> 
-                                    <i class="fa-solid fa-plus"></i> Cộng xu 
-                                </button> 
-                                <button class="minus-btn" onclick="openCoinModal('minus')"> 
-                                    <i class="fa-solid fa-minus"></i> Trừ xu 
-                                </button> 
-                            </div> 
-                        </div> 
-                    </div> 
-
-                    <div class="card"> 
-                        <div class="card-head"> 
-                            <div> 
-                                <h2>🔐 Trạng thái hệ thống</h2> 
-                                <p>Đã đồng bộ Firebase Realtime</p> 
-                            </div> 
-                        </div> 
-                        <div class="balance-box"> 
-                            <div class="notification"> 
-                                <div class="notification-icon green"><i class="fa-solid fa-database"></i></div> 
-                                <div class="notification-content"> 
-                                    <strong>Database</strong> 
-                                    <p>Đã kết nối dữ liệu Firebase.</p> 
-                                    <div class="notification-time">ONLINE</div> 
-                                </div> 
-                            </div> 
-                            <div class="notification"> 
-                                <div class="notification-icon blue"><i class="fa-solid fa-bolt"></i></div> 
-                                <div class="notification-content"> 
-                                    <strong>Realtime</strong> 
-                                    <p>Sẵn cấu trúc để nhận đơn realtime.</p> 
-                                    <div class="notification-time">ONLINE</div> 
-                                </div> 
-                            </div> 
-                            <div class="notification"> 
-                                <div class="notification-icon green"><i class="fa-solid fa-shield-halved"></i></div> 
-                                <div class="notification-content"> 
-                                    <strong>Bảo mật</strong> 
-                                    <p>Hỗ trợ cập nhật qua CSDL.</p> 
-                                    <div class="notification-time">SAFE</div> 
-                                </div> 
-                            </div> 
-                        </div> 
-                    </div> 
-                </div> 
-            </div> 
         </section> 
 
         <!-- ========================= ORDERS ========================= --> 
@@ -1244,60 +782,39 @@
         </section> 
 
         <!-- ========================= CARD MANAGEMENT ========================= -->
-<section id="cards" class="page-section" style="display:none">
-
-    <div class="page-title">
-        <h1>Quản lý thẻ cào</h1>
-        <p>Kiểm tra, duyệt hoặc từ chối thẻ cào khách hàng gửi.</p>
-    </div>
-
-    <div class="card">
-
-        <div class="card-head">
-            <div>
-                <h2>🎫 Danh sách thẻ cào</h2>
-                <p>Các thẻ khách hàng đang chờ xử lý</p>
+        <section id="cards" class="page-section" style="display:none">
+            <div class="page-title">
+                <h1>Quản lý thẻ cào</h1>
+                <p>Kiểm tra, duyệt hoặc từ chối thẻ cào khách hàng gửi.</p>
             </div>
-
-            <button onclick="loadCardRequests()">
-                <i class="fa-solid fa-rotate"></i>
-                Làm mới
-            </button>
-        </div>
-
-        <div class="table-wrap">
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>Khách hàng</th>
-                        <th>Nhà mạng</th>
-                        <th>Mệnh giá</th>
-                        <th>Mã thẻ</th>
-                        <th>Serial</th>
-                        <th>Thời gian</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-
-                <tbody id="cardTable">
-                    <tr>
-                        <td colspan="8"
-                            style="text-align:center;color:#9aa6b8;padding:25px">
-                            Đang tải dữ liệu...
-                        </td>
-                    </tr>
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-</section>
+            <div class="card">
+                <div class="card-head">
+                    <div>
+                        <h2>🎫 Danh sách thẻ cào</h2>
+                        <p>Các thẻ khách hàng đang chờ xử lý</p>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Khách hàng</th>
+                                <th>Nhà mạng</th>
+                                <th>Mệnh giá</th>
+                                <th>Mã thẻ</th>
+                                <th>Serial</th>
+                                <th>Thời gian</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cardTable">
+                            <tr><td colspan="8" style="text-align:center;color:#9aa6b8;padding:25px">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
         <!-- ========================= NOTIFICATIONS ========================= --> 
         <section id="notifications" class="page-section" style="display:none"> 
@@ -1322,6 +839,60 @@
             <div class="page-title"> 
                 <h1>Quản lý xu</h1> 
                 <p>Cộng, trừ và theo dõi biến động xu của khách (Tác động Database).</p> 
+            </div> 
+            <div class="management-grid"> 
+                <div class="card"> 
+                    <div class="card-head"> 
+                        <div> 
+                            <h2>🪙 Quản lý xu nhanh</h2> 
+                            <p>Cộng hoặc trừ xu cho khách</p> 
+                        </div> 
+                    </div> 
+                    <div class="balance-box"> 
+                        <div class="balance-user"> 
+                            <div class="balance-avatar"><i class="fa-solid fa-user"></i></div> 
+                            <div> 
+                                <strong id="quickUserName">Chưa có khách hàng</strong> 
+                                <span>Vui lòng thêm khách hàng</span> 
+                            </div> 
+                        </div> 
+                        <div class="balance-number"> 
+                            <span>Số dư hiện tại</span> 
+                            <strong id="demoBalance">0 xu</strong> 
+                        </div> 
+                        <div class="balance-actions"> 
+                            <button class="add-btn" onclick="openCoinModal('add')"><i class="fa-solid fa-plus"></i> Cộng xu</button> 
+                            <button class="minus-btn" onclick="openCoinModal('minus')"><i class="fa-solid fa-minus"></i> Trừ xu</button> 
+                        </div> 
+                    </div> 
+                </div> 
+
+                <div class="card"> 
+                    <div class="card-head"> 
+                        <div> 
+                            <h2>🔐 Trạng thái hệ thống</h2> 
+                            <p>Đã đồng bộ Firebase Realtime</p> 
+                        </div> 
+                    </div> 
+                    <div class="balance-box"> 
+                        <div class="notification"> 
+                            <div class="notification-icon green"><i class="fa-solid fa-database"></i></div> 
+                            <div class="notification-content"> 
+                                <strong>Database</strong> 
+                                <p>Đã kết nối dữ liệu Firebase.</p> 
+                                <div class="notification-time">ONLINE</div> 
+                            </div> 
+                        </div> 
+                        <div class="notification"> 
+                            <div class="notification-icon blue"><i class="fa-solid fa-bolt"></i></div> 
+                            <div class="notification-content"> 
+                                <strong>Realtime</strong> 
+                                <p>Sẵn cấu trúc để nhận đơn realtime.</p> 
+                                <div class="notification-time">ONLINE</div> 
+                            </div> 
+                        </div> 
+                    </div> 
+                </div> 
             </div> 
             <div class="card"> 
                 <div class="card-head"> 
@@ -1414,9 +985,7 @@
     <div class="modal-box"> 
         <div class="modal-head"> 
             <h3 id="coinModalTitle">Cộng xu</h3> 
-            <button class="close-modal" onclick="closeCoinModal()"> 
-                <i class="fa-solid fa-xmark"></i> 
-            </button> 
+            <button class="close-modal" onclick="closeCoinModal()"><i class="fa-solid fa-xmark"></i></button> 
         </div> 
         <div class="modal-body"> 
             <div class="form-group"> 
@@ -1441,9 +1010,7 @@
     <div class="modal-box"> 
         <div class="modal-head"> 
             <h3 id="customerModalTitle">Quản lý Khách hàng</h3> 
-            <button class="close-modal" onclick="closeCustomerModal()"> 
-                <i class="fa-solid fa-xmark"></i> 
-            </button> 
+            <button class="close-modal" onclick="closeCustomerModal()"><i class="fa-solid fa-xmark"></i></button> 
         </div> 
         <div class="modal-body"> 
             <input type="hidden" id="editCustomerUid">
@@ -1453,8 +1020,8 @@
             </div> 
             <div class="form-group"> 
                 <label>Mật khẩu (Cập nhật trong DB)</label> 
-                <input type="text" id="editCustomerPassword" class="form-control" placeholder="Nhập mật khẩu mới"> 
-                <small style="color:#ef4444; font-weight:600; margin-top:4px; display:block;">Lưu ý: Sửa ở đây chỉ lưu vào Database, không thay đổi mật khẩu đăng nhập gốc của hệ thống Firebase.</small>
+                <input type="text" id="editCustomerPassword" placeholder="Nhập mật khẩu mới"> 
+                <small style="color:#ef4444; font-weight:600; margin-top:4px; display:block;">Lưu ý: Sửa ở đây chỉ lưu vào Database, không thay đổi mật khẩu đăng nhập gốc.</small>
             </div> 
             <div class="form-group"> 
                 <label>Tên hiển thị</label> 
@@ -1517,13 +1084,11 @@ db.ref("users").on("value", snapshot => {
   const newOrders = [];
   const newCards = [];
   customers = [];
-  let orderAdded = false;
 
     snapshot.forEach(child => {
         const userId = child.key;
         const userData = child.val();
         
-        // Cập nhật Customer
         const name = userData.name || userData.ho_ten || userData.email?.split("@")[0] || "User_" + userId.substring(0,5);
         const email = userData.email || "Không có email";
         const password = userData.password || userData.mat_khau || "Chưa lưu";
@@ -1541,9 +1106,6 @@ db.ref("users").on("value", snapshot => {
             rawStatus: !!userData.isLocked
         });
 
-        /* =========================
-           LẤY THẺ CÀO KHÁCH GỬI (ĐÃ SỬA ĐƯỜNG DẪN ĐỒNG BỘ)
-        ========================= */
         if (userData.card_deposits) {
             Object.keys(userData.card_deposits).forEach(requestId => {
                 const card = userData.card_deposits[requestId];
@@ -1556,13 +1118,12 @@ db.ref("users").on("value", snapshot => {
                     amount: Number(card.amount || card.menhGia || 0),
                     cardCode: card.pin || card.maThe || "Không có",
                     cardSerial: card.serial || card.seri || "Không có",
-                    status: card.status || "Chờ xử lý", // Đồng bộ trạng thái tiếng Việt
+                    status: card.status || "Chờ xử lý", 
                     createdAt: Number(card.time || card.createdAt || Date.now())
                 });
             });
         }
 
-        // Lấy Đơn hàng từ tất cả các nền tảng
         const platforms = [
             { key: 'facebookOrders', name: 'Facebook' },
             { key: 'instagramOrders', name: 'Instagram' },
@@ -1574,12 +1135,10 @@ db.ref("users").on("value", snapshot => {
             if (userData[plat.key]) {
                 Object.keys(userData[plat.key]).forEach(orderId => {
                     const orderData = userData[plat.key][orderId];
-                    
-                    // Chuẩn hóa Status
                     let internalStatus = "new";
                     if(orderData.status === "Đang xử lý") internalStatus = "processing";
                     else if(orderData.status === "Hoàn thành") internalStatus = "done";
-                    else if(orderData.status === "Đã hủy") internalStatus = "cancel";
+                    else if(orderData.status === "Đã hủy" || orderData.status === "Thất bại") internalStatus = "cancel";
 
                     newOrders.push({
                         uid: userId, 
@@ -1599,11 +1158,10 @@ db.ref("users").on("value", snapshot => {
         });
     });
 
-    /* Sắp xếp thẻ mới nhất */
     newCards.sort((a, b) => b.createdAt - a.createdAt);
+    newOrders.sort((a, b) => b.createdAt - a.createdAt);
     cardRequests = newCards;
     
-    // Nếu có đơn mới và không phải lần tải đầu tiên, hiện thông báo
     if(!isInitialLoad && newOrders.length > orders.length) {
         addNotification("order", "🔔 Đơn hàng mới", `Hệ thống vừa nhận đơn hàng mới.`);
         showToast("Có đơn hàng mới!");
@@ -1612,7 +1170,6 @@ db.ref("users").on("value", snapshot => {
     orders = newOrders;
     isInitialLoad = false;
 
-    // Cập nhật UI sau khi sync dữ liệu
     renderRecentOrders();
     renderOrders();
     renderCoins();
@@ -1627,54 +1184,47 @@ db.ref("users").on("value", snapshot => {
    NAVIGATION 
 ===================================================== */ 
 function showSection(id, clickedButton = null) { 
-    document.querySelectorAll(".page-section").forEach(section => { 
-        section.style.display = "none"; 
-    }); 
+    document.querySelectorAll(".page-section").forEach(section => { section.style.display = "none"; }); 
     const target = document.getElementById(id); 
-    if (target) { 
-        target.style.display = "block"; 
-    } 
-    document.querySelectorAll(".sb-mi").forEach(button => { 
-        button.classList.remove("active"); 
-    }); 
+    if (target) target.style.display = "block"; 
+    
+    document.querySelectorAll(".sb-mi").forEach(button => { button.classList.remove("active"); }); 
     if (clickedButton) { 
         clickedButton.classList.add("active"); 
     } else { 
         const matching = [...document.querySelectorAll(".sb-mi")].find(button => 
             button.getAttribute("onclick")?.includes(`showSection('${id}'`) 
         ); 
-        if (matching) { 
-            matching.classList.add("active"); 
-        } 
+        if (matching) matching.classList.add("active"); 
     } 
-    const names = { 
-        dashboard: "Dashboard", 
-        orders: "Đơn hàng", 
-        notifications: "Thông báo", 
-        coins: "Quản lý xu", 
-        customers: "Tài khoản khách",
-        cards: "Quản lý thẻ cào",
-        security: "Bảo mật tài khoản" 
-    }; 
+    
+    const names = { dashboard: "Dashboard", orders: "Đơn hàng", notifications: "Thông báo", coins: "Quản lý xu", customers: "Tài khoản khách", cards: "Quản lý thẻ cào", security: "Bảo mật tài khoản" }; 
     document.getElementById("breadcrumb").textContent = names[id] || "Dashboard"; 
+    
     if (id === "orders") renderOrders(); 
     if (id === "coins") renderCoins(); 
     if (id === "customers") renderCustomers(); 
     if (id === "notifications") renderNotifications("fullNotificationList"); 
-    if (window.innerWidth <= 760) { 
-        document.getElementById("sidebar").classList.remove("open"); 
-    } 
+    
+    if (window.innerWidth <= 800) document.getElementById("sidebar").classList.remove("open"); 
 } 
 
-/* ===================================================== 
-   SIDEBAR MOBILE 
-===================================================== */ 
 function toggleSidebar() { 
     document.getElementById("sidebar").classList.toggle("open"); 
 } 
 
+document.addEventListener("click", e => {
+    const sidebar = document.getElementById('sidebar');
+    const mobileBtn = document.querySelector('.mobile-menu');
+    if (window.innerWidth <= 800 && sidebar && mobileBtn) {
+        if (!sidebar.contains(e.target) && !mobileBtn.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
+    }
+});
+
 /* ===================================================== 
-   ORDERS (SYNC WITH FIREBASE)
+   ORDERS
 ===================================================== */ 
 function getStatusHTML(status) { 
     if (status === "new") return `<span class="status new">Đơn mới</span>`; 
@@ -1693,8 +1243,8 @@ function renderRecentOrders() {
         <div class="order-item"> 
             <div class="order-icon"><i class="fa-solid fa-box"></i></div> 
             <div class="order-info"> 
-                <strong>${order.id} · ${order.user}</strong> 
-                <span>${order.service} · ${order.quantity}</span> 
+                <strong>${escapeHtml(order.id)} · ${escapeHtml(order.user)}</strong> 
+                <span>${escapeHtml(order.service)} · ${order.quantity.toLocaleString('vi-VN')}</span> 
             </div> 
             <div>${getStatusHTML(order.status)}</div> 
             <div class="order-price"> 
@@ -1714,19 +1264,18 @@ function renderOrders() {
     }
     table.innerHTML = orders.map((order, index) => ` 
         <tr> 
-            <td><strong>${order.id}</strong></td> 
-            <td>${order.user}</td> 
-            <td>${order.service}</td> 
-            <td>${order.quantity}</td> 
+            <td><strong>${escapeHtml(order.id)}</strong></td> 
+            <td>${escapeHtml(order.user)}</td> 
+            <td>${escapeHtml(order.service)}</td> 
+            <td>${order.quantity.toLocaleString('vi-VN')}</td> 
             <td><strong style="color:#1677ff">${order.coins.toLocaleString()}</strong></td> 
             <td>${getStatusHTML(order.status)}</td> 
             <td> 
                 <div class="table-actions"> 
-                    ${order.status === "new" ? ` 
-                    <button onclick="processOrder(${index})" title="Nhận đơn"><i class="fa-solid fa-play"></i></button>` : ""} 
-                    ${order.status === "processing" ? ` 
-                    <button onclick="completeOrder(${index})" title="Hoàn thành"><i class="fa-solid fa-check"></i></button>` : ""} 
-                    <button onclick="viewOrder(${index})" title="Xem"><i class="fa-solid fa-eye"></i></button> 
+                    ${order.status === "new" ? `<button onclick="processOrder(${index})" title="Nhận đơn"><i class="fa-solid fa-play"></i></button>` : ""} 
+                    ${order.status === "processing" ? `<button onclick="completeOrder(${index})" title="Hoàn thành"><i class="fa-solid fa-check"></i></button>` : ""} 
+                    <button onclick="viewOrder(${index})" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></button> 
+                    ${order.status !== "cancel" ? `<button onclick="cancelOrder(${index})" title="Hủy đơn"><i class="fa-solid fa-xmark" style="color:#ef4444"></i></button>` : ""}
                 </div> 
             </td> 
         </tr> 
@@ -1736,27 +1285,81 @@ function renderOrders() {
 
 function processOrder(index) { 
     const order = orders[index];
-    db.ref("users/" + order.uid + "/" + order.platform + "/" + order.id).update({
-        status: "Đang xử lý"
-    }).then(() => {
-        addNotification("order", "Đơn đang xử lý", `${order.id} đã được nhận xử lý.`); 
-        showToast("Đã nhận đơn hàng"); 
+    Swal.fire({
+        title: "Nhận xử lý đơn này?",
+        text: `Mã đơn: ${order.id}`,
+        icon: "question",
+        showCancelButton: true, confirmButtonText: "Đồng ý", cancelButtonText: "Hủy", confirmButtonColor: "#1677ff"
+    }).then(r => {
+        if(r.isConfirmed) {
+            db.ref("users/" + order.uid + "/" + order.platform + "/" + order.id).update({ status: "Đang xử lý" }).then(() => {
+                addNotification("order", "Đơn đang xử lý", `${order.id} đã được nhận xử lý.`); 
+                showToast("Đã cập nhật trạng thái"); 
+            });
+        }
     });
 } 
 
 function completeOrder(index) { 
     const order = orders[index];
-    db.ref("users/" + order.uid + "/" + order.platform + "/" + order.id).update({
-        status: "Hoàn thành"
-    }).then(() => {
-        addNotification("order", "Đơn hoàn thành", `${order.id} đã hoàn thành.`); 
-        showToast("Đã hoàn thành đơn hàng"); 
+    Swal.fire({
+        title: "Hoàn thành đơn hàng?",
+        text: `Xác nhận đã chạy xong đơn ${order.id}?`,
+        icon: "question",
+        showCancelButton: true, confirmButtonText: "Đồng ý", cancelButtonText: "Hủy", confirmButtonColor: "#10b981"
+    }).then(r => {
+        if(r.isConfirmed) {
+            db.ref("users/" + order.uid + "/" + order.platform + "/" + order.id).update({ status: "Hoàn thành" }).then(() => {
+                addNotification("order", "Đơn hoàn thành", `${order.id} đã hoàn thành.`); 
+                showToast("Đã hoàn thành đơn hàng"); 
+            });
+        }
     });
 } 
 
+function cancelOrder(index) {
+    const order = orders[index];
+    Swal.fire({
+        title: "Hủy đơn hàng?",
+        text: `Hệ thống sẽ hoàn lại ${order.coins.toLocaleString('vi-VN')} xu cho khách. Bạn có chắc chắn?`,
+        icon: "warning",
+        showCancelButton: true, confirmButtonText: "Hủy đơn & Hoàn Xu", cancelButtonText: "Đóng", confirmButtonColor: "#ef4444"
+    }).then(r => {
+        if(r.isConfirmed) {
+            db.ref("users/" + order.uid).once("value").then(snap => {
+                let currentXu = Number(snap.val()?.xu || 0);
+                db.ref("users/" + order.uid).update({ xu: currentXu + order.coins }).then(() => {
+                    db.ref("users/" + order.uid + "/lich_su_hoa_hong").push({
+                        time: Date.now(), content: "Hoàn tiền hủy đơn " + order.id, amount: order.coins, status: "Thành công"
+                    });
+                    return db.ref("users/" + order.uid + "/" + order.platform + "/" + order.id).update({ status: "Đã hủy" });
+                }).then(() => {
+                    showToast("Đã hủy đơn và hoàn xu!");
+                });
+            });
+        }
+    });
+}
+
 function viewOrder(index) { 
     const order = orders[index]; 
-    alert(`Mã đơn: ${order.id}\nKhách: ${order.user}\nDịch vụ: ${order.service}\nSố lượng: ${order.quantity}\nXu: ${order.coins}\nTrạng thái: ${order.status}`); 
+    Swal.fire({
+        title: "Chi tiết đơn hàng",
+        html: `
+            <div style="text-align: left; line-height: 1.8; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
+                <b>Mã đơn:</b> <span style="color: #1677ff;">${escapeHtml(order.id)}</span><br>
+                <b>Nền tảng:</b> ${escapeHtml(order.platform)}<br>
+                <b>Khách hàng:</b> ${escapeHtml(order.user)}<br>
+                <b>Dịch vụ:</b> ${escapeHtml(order.service)}<br>
+                <b>Số lượng:</b> ${order.quantity.toLocaleString('vi-VN')}<br>
+                <b>Số xu đã trừ:</b> <strong style="color: #10b981;">${order.coins.toLocaleString('vi-VN')} xu</strong><br>
+                <b>Trạng thái:</b> ${getStatusHTML(order.status)}
+            </div>
+        `,
+        icon: "info",
+        confirmButtonText: "Đóng",
+        confirmButtonColor: "#1677ff"
+    });
 } 
 
 /* ===================================================== 
@@ -1809,7 +1412,7 @@ function updateNotificationBadge() {
 } 
 
 /* ===================================================== 
-   COINS & CUSTOMERS (SYNC WITH FIREBASE)
+   COINS & CUSTOMERS
 ===================================================== */ 
 function renderCoins() { 
     const table = document.getElementById("coinTable"); 
@@ -1823,13 +1426,13 @@ function renderCoins() {
                 <div class="customer"> 
                     <div class="customer-avatar">${customer.name.charAt(0).toUpperCase()}</div> 
                     <div class="customer-name"> 
-                        <strong>${customer.name}</strong> 
+                        <strong>${escapeHtml(customer.name)}</strong> 
                         <span>ID: ${customer.id}</span> 
                     </div> 
                 </div> 
             </td> 
             <td><strong style="color:#1677ff">${customer.coins.toLocaleString()} xu</strong></td> 
-            <td><span class="status done">${customer.status}</span></td> 
+            <td>${customer.status === "Hoạt động" ? `<span class="status done">Hoạt động</span>` : `<span class="status cancel">Đã khóa</span>`}</td> 
             <td> 
                 <div class="table-actions"> 
                     <button onclick="openCoinModalForCustomer(${index}, 'add')"><i class="fa-solid fa-plus"></i></button> 
@@ -1856,7 +1459,7 @@ function renderCustomers() {
                 <div class="customer"> 
                     <div class="customer-avatar">${customer.name.charAt(0).toUpperCase()}</div> 
                     <div class="customer-name"> 
-                        <strong>${customer.name}</strong> 
+                        <strong>${escapeHtml(customer.name)}</strong> 
                         <span>ID: ${customer.id}</span> 
                     </div> 
                 </div> 
@@ -1882,13 +1485,13 @@ function renderCustomers() {
                     <div class="customer"> 
                         <div class="customer-avatar">${customer.name.charAt(0).toUpperCase()}</div> 
                         <div class="customer-name"> 
-                            <strong>${customer.name}</strong> 
+                            <strong>${escapeHtml(customer.name)}</strong> 
                             <span>ID: ${customer.id}</span> 
                         </div> 
                     </div> 
                 </td>
-                <td>${customer.email}</td>
-                <td style="color:#ef4444; font-weight:700;">${customer.password}</td>
+                <td>${escapeHtml(customer.email)}</td>
+                <td style="color:#ef4444; font-weight:700;">${escapeHtml(customer.password)}</td>
                 <td>${customer.status === "Hoạt động" ? `<span class="status done">Hoạt động</span>` : `<span class="status cancel">Đã khóa</span>`}</td> 
                 <td> 
                     <div class="table-actions"> 
@@ -1953,7 +1556,7 @@ function toggleCustomer(index) {
 } 
 
 /* ===================================================== 
-   COIN MODAL LOGIC (FIREBASE PUSH)
+   COIN MODAL LOGIC 
 ===================================================== */
 function populateCoinModalUsers() {
     const select = document.getElementById("coinUser");
@@ -1961,7 +1564,7 @@ function populateCoinModalUsers() {
         select.innerHTML = `<option value="">Chưa có dữ liệu khách hàng</option>`;
         return;
     }
-    select.innerHTML = customers.map((c, i) => `<option value="${i}">${c.name}</option>`).join("");
+    select.innerHTML = customers.map((c, i) => `<option value="${i}">${escapeHtml(c.name)}</option>`).join("");
 }
 
 function openCoinModal(mode) { 
@@ -1993,7 +1596,7 @@ function closeCoinModal() {
 function submitCoin() { 
     if(customers.length === 0) return showToast("Hệ thống chưa có khách hàng");
     const amount = Number(document.getElementById("coinAmount").value); 
-    const reason = document.getElementById("coinReason").value.trim(); 
+    const reason = document.getElementById("coinReason").value.trim() || "Thao tác từ Admin"; 
     selectedCustomer = document.getElementById("coinUser").value;
 
     if (!amount || amount <= 0) return showToast("Vui lòng nhập số lượng hợp lệ"); 
@@ -2011,15 +1614,28 @@ function submitCoin() {
         xu: newBalance
     }).then(() => {
         addNotification(
-    "coin",
-    coinMode === "add" ? "Cộng xu" : "Trừ xu",
-    `${customer.name} đã được ${coinMode === "add" ? "cộng" : "trừ"} ${coinAmount.toLocaleString()} xu.`
-);
+            "coin",
+            coinMode === "add" ? "Cộng xu" : "Trừ xu",
+            `${customer.name} đã được ${coinMode === "add" ? "cộng" : "trừ"} ${coinAmount.toLocaleString()} xu.`
+        );
         
+        // Ghi lịch sử biến động số dư cho khách hàng
+        db.ref("users/" + customer.uid + "/lich_su_hoa_hong").push({
+            time: Date.now(),
+            content: reason,
+            amount: coinMode === "add" ? coinAmount : -coinAmount,
+            status: "Thành công"
+        });
+
         document.getElementById("coinAmount").value = ""; 
         document.getElementById("coinReason").value = ""; 
         closeCoinModal(); 
-        showToast(coinMode === "add" ? "Đã cộng xu thành công" : "Đã trừ xu thành công"); 
+        Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: coinMode === "add" ? `Đã cộng ${coinAmount.toLocaleString()} xu cho ${customer.name}` : `Đã trừ ${coinAmount.toLocaleString()} xu của ${customer.name}`,
+            confirmButtonColor: "#1677ff"
+        });
     }).catch((err) => {
         showToast("Có lỗi xảy ra: " + err.message);
     });
@@ -2029,13 +1645,14 @@ function submitCoin() {
    STATS 
 ===================================================== */ 
 function updateStats() { 
-    document.getElementById("totalOrders").textContent = orders.length; 
+    document.getElementById("totalOrders").textContent = orders.length.toLocaleString(); 
     const processing = orders.filter(order => order.status === "processing").length; 
-    document.getElementById("processingOrders").textContent = processing; 
+    document.getElementById("processingOrders").textContent = processing.toLocaleString(); 
     document.getElementById("orderBadge").textContent = orders.filter(order => order.status === "new").length; 
+    document.getElementById("orderBadge").style.display = orders.filter(order => order.status === "new").length > 0 ? "grid" : "none";
 
     const totalCustomers = customers.length;
-    document.getElementById("totalCustomers").textContent = totalCustomers;
+    document.getElementById("totalCustomers").textContent = totalCustomers.toLocaleString();
 
     const totalCoins = customers.reduce((sum, cus) => sum + cus.coins, 0);
     document.getElementById("totalCoins").textContent = totalCoins.toLocaleString();
@@ -2106,7 +1723,7 @@ document.getElementById("globalSearch").addEventListener("input", function() {
         table.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9aa6b8;padding:20px;">Không tìm thấy kết quả</td></tr>`;
         return;
     }
-    table.innerHTML = filtered.map(order => ` 
+    table.innerHTML = filtered.map((order, index) => ` 
         <tr> 
             <td><strong>${order.id}</strong></td> 
             <td>${order.user}</td> 
@@ -2114,16 +1731,23 @@ document.getElementById("globalSearch").addEventListener("input", function() {
             <td>${order.quantity}</td> 
             <td>${order.coins.toLocaleString()} xu</td> 
             <td>${getStatusHTML(order.status)}</td> 
-            <td><span style="color:#9aa6b8">Kết quả tìm kiếm</span></td> 
+            <td><span style="color:#9aa6b8; font-size:10px;">KQ tìm kiếm</span></td> 
         </tr> 
     `).join(""); 
 }); 
 
 function logout() { 
-    if (confirm("Bạn có chắc muốn đăng xuất khỏi khu quản lý?")) { 
-        localStorage.removeItem("adminLogin"); 
-        window.location.href = "index.html"; 
-    } 
+    Swal.fire({
+        title: "Đăng xuất?",
+        text: "Bạn có chắc muốn thoát quản lý?",
+        icon: "warning",
+        showCancelButton: true, confirmButtonText: "Đăng xuất", cancelButtonText: "Hủy", confirmButtonColor: "#1677ff", cancelButtonColor: "#ef4444"
+    }).then(r => {
+        if(r.isConfirmed) {
+            localStorage.removeItem("adminLogin"); 
+            window.location.href = "index.html";
+        }
+    });
 } 
 
 document.getElementById("coinModal").addEventListener("click", function(event) { 
@@ -2136,109 +1760,41 @@ document.getElementById("customerModal").addEventListener("click", function(even
 /* =====================================================
    CARD MANAGEMENT
 ===================================================== */
-
 function getCardStatusHTML(status) {
-    if (status === "Thành công" || status === "approved") {
-        return `<span class="status card-approved">Đã duyệt</span>`;
-    }
-    if (status === "Thất bại" || status === "Sai thẻ" || status === "rejected") {
-        return `<span class="status card-rejected">Từ chối</span>`;
-    }
+    if (status === "Thành công" || status === "approved") return `<span class="status card-approved">Đã duyệt</span>`;
+    if (status === "Thất bại" || status === "Sai thẻ" || status === "rejected") return `<span class="status card-rejected">Từ chối</span>`;
     return `<span class="status card-pending">Chờ duyệt</span>`;
 }
 
 function renderCards() {
     const table = document.getElementById("cardTable");
     if (!table) return;
-
     if (cardRequests.length === 0) {
-        table.innerHTML = `
-            <tr>
-                <td colspan="8"
-                    style="text-align:center;color:#9aa6b8;padding:25px">
-                    Chưa có thẻ cào nào.
-                </td>
-            </tr>
-        `;
+        table.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#9aa6b8;padding:25px">Chưa có thẻ cào nào.</td></tr>`;
         return;
     }
 
     table.innerHTML = cardRequests.map((card, index) => {
-        const time = card.createdAt
-            ? new Date(card.createdAt).toLocaleString("vi-VN")
-            : "Không rõ";
-
+        const time = card.createdAt ? new Date(card.createdAt).toLocaleString("vi-VN") : "Không rõ";
         const isPending = card.status === "Chờ xử lý" || card.status === "pending";
-
         return `
             <tr>
                 <td>
                     <div class="customer">
-                        <div class="customer-avatar">
-                            ${escapeHtml(card.user.charAt(0).toUpperCase())}
-                        </div>
-                        <div class="customer-name">
-                            <strong>
-                                ${escapeHtml(card.user)}
-                            </strong>
-                            <span>
-                                ${escapeHtml(card.email)}
-                            </span>
-                        </div>
+                        <div class="customer-avatar">${escapeHtml(card.user.charAt(0).toUpperCase())}</div>
+                        <div class="customer-name"><strong>${escapeHtml(card.user)}</strong><span>${escapeHtml(card.email)}</span></div>
                     </div>
                 </td>
-                <td>
-                    <strong>
-                        ${escapeHtml(card.cardType)}
-                    </strong>
-                </td>
-                <td>
-                    <strong class="card-amount">
-                        ${card.amount.toLocaleString("vi-VN")}đ
-                    </strong>
-                </td>
-                <td>
-                    <span class="card-code">
-                        ${escapeHtml(card.cardCode)}
-                    </span>
-                </td>
-                <td>
-                    <span class="card-serial">
-                        ${escapeHtml(card.cardSerial)}
-                    </span>
-                </td>
-                <td>
-                    ${time}
-                </td>
-                <td>
-                    ${getCardStatusHTML(card.status)}
-                </td>
+                <td><strong style="text-transform: uppercase;">${escapeHtml(card.cardType)}</strong></td>
+                <td><strong class="card-amount">${card.amount.toLocaleString("vi-VN")}đ</strong></td>
+                <td><span class="card-code">${escapeHtml(card.cardCode)}</span></td>
+                <td><span class="card-serial">${escapeHtml(card.cardSerial)}</span></td>
+                <td>${time}</td>
+                <td>${getCardStatusHTML(card.status)}</td>
                 <td>
                     <div class="card-actions">
-                        <button
-                            class="card-view"
-                            onclick="viewCard(${index})"
-                            title="Xem thẻ">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        ${
-                            isPending
-                            ? `
-                                <button
-                                    class="card-approve"
-                                    onclick="approveCard(${index})"
-                                    title="Duyệt thẻ">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                <button
-                                    class="card-reject"
-                                    onclick="rejectCard(${index})"
-                                    title="Từ chối">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                            `
-                            : ""
-                        }
+                        <button class="card-view" onclick="viewCard(${index})" title="Xem thẻ"><i class="fa-solid fa-eye"></i></button>
+                        ${isPending ? `<button class="card-approve" onclick="approveCard(${index})" title="Duyệt thẻ"><i class="fa-solid fa-check"></i></button><button class="card-reject" onclick="rejectCard(${index})" title="Từ chối"><i class="fa-solid fa-xmark"></i></button>` : ""}
                     </div>
                 </td>
             </tr>
@@ -2249,176 +1805,111 @@ function renderCards() {
 function viewCard(index) {
     const card = cardRequests[index];
     if (!card) return;
-
-    const statusText =
-        (card.status === "Thành công" || card.status === "approved")
-            ? "Đã duyệt"
-            : (card.status === "Thất bại" || card.status === "Sai thẻ" || card.status === "rejected")
-                ? "Đã từ chối"
-                : "Chờ duyệt";
-
-    alert(
-        "THÔNG TIN THẺ CÀO\n\n" +
-        "Khách hàng: " + card.user + "\n" +
-        "Email: " + card.email + "\n" +
-        "Nhà mạng: " + card.cardType + "\n" +
-        "Mệnh giá: " + card.amount.toLocaleString("vi-VN") + "đ\n" +
-        "Mã thẻ: " + card.cardCode + "\n" +
-        "Serial: " + card.cardSerial + "\n" +
-        "Trạng thái: " + statusText
-    );
+    const statusText = (card.status === "Thành công" || card.status === "approved") ? "Đã duyệt" : (card.status === "Thất bại" || card.status === "Sai thẻ" || card.status === "rejected") ? "Đã từ chối" : "Chờ duyệt";
+    Swal.fire({
+        title: "Thông tin thẻ cào",
+        html: `
+            <div style="text-align: left; line-height: 1.8; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
+                <b>Khách hàng:</b> ${escapeHtml(card.user)}<br>
+                <b>Email:</b> ${escapeHtml(card.email)}<br>
+                <b>Nhà mạng:</b> <span style="text-transform: uppercase; font-weight: bold;">${escapeHtml(card.cardType)}</span><br>
+                <b>Mệnh giá:</b> <span style="color: #059669; font-weight: bold;">${card.amount.toLocaleString("vi-VN")}đ</span><br>
+                <b>Mã thẻ:</b> <span style="color: #1677ff; font-weight: bold;">${escapeHtml(card.cardCode)}</span><br>
+                <b>Serial:</b> <span style="color: #526074; font-weight: bold;">${escapeHtml(card.cardSerial)}</span><br>
+                <b>Trạng thái:</b> ${statusText}
+            </div>
+        `,
+        icon: "info", confirmButtonText: "Đóng", confirmButtonColor: "#1677ff"
+    });
 }
 
 function approveCard(index) {
     const card = cardRequests[index];
     if (!card) return;
+    if (card.status !== "Chờ xử lý" && card.status !== "pending") return Swal.fire("Lỗi", "Thẻ này đã được xử lý trước đó.", "warning");
+    if (!card.amount || card.amount <= 0) return Swal.fire("Lỗi", "Mệnh giá thẻ không hợp lệ.", "error");
 
-    if (card.status !== "Chờ xử lý" && card.status !== "pending") {
-        showToast("Thẻ này đã được xử lý trước đó.");
-        return;
-    }
+    const coinReward = Number(card.amount) * 0.8 * 30; // Trừ 20% phí rồi nhân 30
 
-    if (!card.amount || card.amount <= 0) {
-        showToast("Mệnh giá thẻ không hợp lệ.");
-        return;
-    }
+    Swal.fire({
+        title: "Xác nhận duyệt thẻ?",
+        html: `
+            <div style="text-align: left; line-height: 1.8; font-size: 14px;">
+                <b>Khách hàng:</b> ${escapeHtml(card.user)}<br>
+                <b>Nhà mạng:</b> <span style="text-transform: uppercase;">${escapeHtml(card.cardType)}</span><br>
+                <b>Mệnh giá:</b> ${card.amount.toLocaleString("vi-VN")}đ<br><br>
+                <div style="padding: 10px; background: #eafaf5; border: 1px solid #10b981; border-radius: 8px; color: #047857;">
+                    <b>Hệ thống sẽ cộng:</b> <span style="font-size: 16px;">${coinReward.toLocaleString("vi-VN")} xu</span><br>
+                    <i>(Đã trừ 20% phí gạch thẻ)</i>
+                </div>
+            </div>
+        `,
+        icon: "question", showCancelButton: true, confirmButtonColor: "#10b981", cancelButtonColor: "#64748b", confirmButtonText: "Duyệt & Cộng Xu", cancelButtonText: "Hủy"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
+            cardRef.once("value").then(snapshot => {
+                const currentCard = snapshot.val();
+                if (!currentCard) return Swal.fire("Lỗi", "Không tìm thấy thẻ trong Database.", "error");
+                if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") return Swal.fire("Lỗi", "Thẻ này đã được xử lý.", "error");
 
-    const coinReward = Number(card.amount) * 0.8 * 30;
-
-    const confirmApprove = confirm(
-        "Duyệt thẻ này?\n\n" +
-        "Khách: " + card.user + "\n" +
-        "Nhà mạng: " + card.cardType + "\n" +
-        "Mệnh giá: " + card.amount.toLocaleString("vi-VN") + "đ\n\n" +
-        "Hệ thống sẽ cộng " + coinReward.toLocaleString("vi-VN") + " xu cho khách (đã trừ 20% phí)."
-    );
-
-    if (!confirmApprove) return;
-
-    const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
-
-    cardRef.once("value").then(snapshot => {
-        const currentCard = snapshot.val();
-
-        if (!currentCard) {
-            showToast("Không tìm thấy thẻ trong Database.");
-            return;
-        }
-
-        if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") {
-            showToast("Thẻ này đã được xử lý.");
-            return;
-        }
-
-        const userRef = db.ref("users/" + card.uid);
-
-        return userRef.once("value").then(userSnapshot => {
-            const userData = userSnapshot.val() || {};
-
-            const currentCoins = Number(
-                userData.xu ||
-                userData.balance ||
-                userData.coins ||
-                0
-            );
-
-            const newCoins = currentCoins + coinReward;
-
-            return userRef.update({
-                xu: newCoins,
-                balance: newCoins,
-                coins: newCoins
+                const userRef = db.ref("users/" + card.uid);
+                return userRef.once("value").then(userSnapshot => {
+                    const userData = userSnapshot.val() || {};
+                    const currentCoins = Number(userData.xu || userData.balance || userData.coins || 0);
+                    const newCoins = currentCoins + coinReward;
+                    return userRef.update({ xu: newCoins, balance: newCoins, coins: newCoins }).then(() => {
+                        db.ref("users/" + card.uid + "/lich_su_hoa_hong").push({ time: Date.now(), content: "Nạp thẻ cào thành công", amount: coinReward, status: "Thành công" });
+                        return cardRef.update({ status: "Thành công", approvedAt: firebase.database.ServerValue.TIMESTAMP, approvedBy: "HoangKun Admin" });
+                    });
+                });
             }).then(() => {
-                // Ghi vào lịch sử để khách dễ theo dõi
-                db.ref("users/" + card.uid + "/lich_su_hoa_hong").push({
-                    time: Date.now(),
-                    content: "Nạp thẻ cào thành công",
-                    amount: coinReward,
-                    status: "Thành công"
-                });
-
-                return cardRef.update({
-                    status: "Thành công",
-                    approvedAt: firebase.database.ServerValue.TIMESTAMP,
-                    approvedBy: "HoangKun Admin"
-                });
+                addNotification("coin", "Đã duyệt thẻ cào", `${card.user} được cộng ${coinReward.toLocaleString("vi-VN")} xu.`);
+                Swal.fire("Thành công!", `Đã duyệt thẻ và cộng ${coinReward.toLocaleString("vi-VN")} xu cho khách.`, "success");
+            }).catch(error => {
+                Swal.fire("Lỗi", "Lỗi khi duyệt thẻ: " + error.message, "error");
             });
-        });
-
-    }).then(() => {
-        addNotification(
-            "coin",
-            "Đã duyệt thẻ cào",
-            `${card.user} được cộng ${coinReward.toLocaleString("vi-VN")} xu.`
-        );
-
-        showToast(
-            "Đã duyệt thẻ và cộng " +
-        coinReward.toLocaleString("vi-VN") +
-        " xu"
-        );
-
-    }).catch(error => {
-        console.error(error);
-        showToast("Lỗi khi duyệt thẻ: " + error.message);
+        }
     });
 }
 
 function rejectCard(index) {
     const card = cardRequests[index];
     if (!card) return;
+    if (card.status !== "Chờ xử lý" && card.status !== "pending") return Swal.fire("Lỗi", "Thẻ này đã được xử lý.", "error");
 
-    if (card.status !== "Chờ xử lý" && card.status !== "pending") {
-        showToast("Thẻ này đã được xử lý.");
-        return;
-    }
+    Swal.fire({
+        title: "Từ chối thẻ cào",
+        input: "text",
+        inputLabel: "Lý do từ chối (VD: Thẻ sai, thẻ đã sử dụng...)",
+        inputPlaceholder: "Nhập lý do từ chối...",
+        icon: "warning", showCancelButton: true, confirmButtonColor: "#ef4444", cancelButtonColor: "#64748b", confirmButtonText: "Từ chối", cancelButtonText: "Hủy",
+        inputValidator: (value) => { if (!value) return 'Vui lòng nhập lý do từ chối!' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const rejectReason = result.value.trim() || "Thẻ không hợp lệ";
+            const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
 
-    const reason = prompt(
-        "Nhập lý do từ chối thẻ:\n\n" +
-        "Ví dụ: Thẻ sai, thẻ đã sử dụng, sai serial..."
-    );
+            cardRef.once("value").then(snapshot => {
+                const currentCard = snapshot.val();
+                if (!currentCard) return Swal.fire("Lỗi", "Không tìm thấy thẻ.", "error");
+                if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") return Swal.fire("Lỗi", "Thẻ này đã được xử lý.", "error");
 
-    if (reason === null) return;
-
-    const rejectReason = reason.trim() || "Thẻ không hợp lệ";
-    const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
-
-    cardRef.once("value").then(snapshot => {
-        const currentCard = snapshot.val();
-        if (!currentCard) {
-            showToast("Không tìm thấy thẻ.");
-            return;
+                return cardRef.update({ status: "Thất bại", rejectReason: rejectReason, rejectedAt: firebase.database.ServerValue.TIMESTAMP, rejectedBy: "HoangKun Admin" });
+            }).then(() => {
+                addNotification("order", "Từ chối thẻ cào", `${card.user}: ${rejectReason}`);
+                Swal.fire("Đã từ chối", "Thẻ cào đã bị từ chối thành công.", "success");
+            }).catch(error => {
+                Swal.fire("Lỗi", "Lỗi khi từ chối thẻ: " + error.message, "error");
+            });
         }
-
-        if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") {
-            showToast("Thẻ này đã được xử lý.");
-            return;
-        }
-
-        return cardRef.update({
-            status: "Thất bại",
-            rejectReason: rejectReason,
-            rejectedAt: firebase.database.ServerValue.TIMESTAMP,
-            rejectedBy: "HoangKun Admin"
-        });
-
-    }).then(() => {
-        addNotification("order", "Từ chối thẻ cào", `${card.user}: ${rejectReason}`);
-        showToast("Đã từ chối thẻ cào.");
-    }).catch(error => {
-        console.error(error);
-        showToast("Lỗi khi từ chối thẻ: " + error.message);
     });
 }
 
 function updateCardBadge() {
     const badge = document.getElementById("cardBadge");
     if (!badge) return;
-
-    const pending = cardRequests.filter(
-        card => card.status === "Chờ xử lý" || card.status === "pending"
-    ).length;
-
+    const pending = cardRequests.filter(card => card.status === "Chờ xử lý" || card.status === "pending").length;
     badge.textContent = pending;
     badge.style.display = pending > 0 ? "grid" : "none";
 }
@@ -2427,460 +1918,63 @@ function updateCardBadge() {
    ESCAPE HTML
 ===================================================== */
 function escapeHtml(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 function escapeHTML(str) { return escapeHtml(str); }
 
 /* =========================================================
    HOANGKUN SECURITY SYSTEM
    CHỐNG F12 / CHUỘT PHẢI / DEVTOOLS / VIEW SOURCE
-   ========================================================= */
-
+========================================================= */
 (function () {
-
     let warningCooldown = false;
-
-    /* =========================
-       THÔNG BÁO CẢNH BÁO
-    ========================= */
     function securityWarning(message = "Thao tác này không được phép!") {
-
-        // Không spam popup liên tục
         if (warningCooldown) return;
-
         warningCooldown = true;
-
-        setTimeout(() => {
-            warningCooldown = false;
-        }, 1800);
-
+        setTimeout(() => { warningCooldown = false; }, 1800);
         if (typeof Swal !== "undefined") {
-
             Swal.fire({
-                icon: "warning",
-                title: "⚠️ CẢNH BÁO BẢO MẬT",
-                html: `
-                    <div style="
-                        text-align:center;
-                        color:#64748b;
-                        font-size:14px;
-                        line-height:1.7;
-                    ">
-                        <div style="
-                            width:65px;
-                            height:65px;
-                            margin:0 auto 15px;
-                            border-radius:50%;
-                            background:linear-gradient(135deg,#fff7ed,#ffedd5);
-                            display:flex;
-                            align-items:center;
-                            justify-content:center;
-                            font-size:30px;
-                        ">
-                            🔒
-                        </div>
-
-                        <b style="color:#ef4444;font-size:15px;">
-                            ${message}
-                        </b>
-
-                        <p style="margin-top:8px;">
-                            Vui lòng không cố gắng truy cập
-                            công cụ dành cho nhà phát triển.
-                        </p>
-
-                        <div style="
-                            margin-top:14px;
-                            padding:10px 12px;
-                            background:#f8fafc;
-                            border:1px solid #e2e8f0;
-                            border-radius:10px;
-                            font-size:12px;
-                        ">
-                            🛡️ HoangKun Store Security
-                        </div>
-                    </div>
-                `,
-                confirmButtonText: "Đã hiểu",
-                confirmButtonColor: "#1677ff",
-                width: "420px",
-                allowOutsideClick: true,
-                allowEscapeKey: true,
-                backdrop: "rgba(15,23,42,.78)",
-                showClass: {
-                    popup: `
-                        animate__animated
-                        animate__fadeInDown
-                    `
-                }
+                icon: "warning", title: "⚠️ CẢNH BÁO BẢO MẬT",
+                html: `<div style="text-align:center;color:#64748b;font-size:14px;line-height:1.7;"><div style="width:65px;height:65px;margin:0 auto 15px;border-radius:50%;background:linear-gradient(135deg,#fff7ed,#ffedd5);display:flex;align-items:center;justify-content:center;font-size:30px;">🔒</div><b style="color:#ef4444;font-size:15px;">${message}</b><p style="margin-top:8px;">Vui lòng không cố gắng truy cập công cụ dành cho nhà phát triển.</p><div style="margin-top:14px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;">🛡️ HoangKun Store Security</div></div>`,
+                confirmButtonText: "Đã hiểu", confirmButtonColor: "#1677ff", width: "420px", allowOutsideClick: true, allowEscapeKey: true, backdrop: "rgba(15,23,42,.78)", showClass: { popup: `animate__animated animate__fadeInDown` }
             });
-
-        } else {
-            alert("⚠️ CẢNH BÁO BẢO MẬT\n\n" + message);
-        }
+        } else { alert("⚠️ CẢNH BÁO BẢO MẬT\n\n" + message); }
     }
 
-
-    /* =========================
-       CẤM CHUỘT PHẢI
-    ========================= */
-    document.addEventListener("contextmenu", function (e) {
-
-        e.preventDefault();
-
-        securityWarning(
-            "Chuột phải đã bị vô hiệu hóa trên trang này!"
-        );
-
-        return false;
-
-    }, true);
-
-
-    /* =========================
-       CẤM F12
-    ========================= */
+    document.addEventListener("contextmenu", function (e) { e.preventDefault(); securityWarning("Chuột phải đã bị vô hiệu hóa trên trang này!"); return false; }, true);
+    
     document.addEventListener("keydown", function (e) {
-
         const key = e.key.toLowerCase();
-
-        /* F12 */
-        if (e.key === "F12" || e.keyCode === 123) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Phím F12 đã bị vô hiệu hóa!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + SHIFT + I
-           DEVTOOLS
-        ========================= */
-        if (
-            e.ctrlKey &&
-            e.shiftKey &&
-            key === "i"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép mở Developer Tools!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + SHIFT + J
-           CONSOLE
-        ========================= */
-        if (
-            e.ctrlKey &&
-            e.shiftKey &&
-            key === "j"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép mở Console!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + SHIFT + C
-           INSPECT ELEMENT
-        ========================= */
-        if (
-            e.ctrlKey &&
-            e.shiftKey &&
-            key === "c"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép sử dụng Inspect Element!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + U
-           VIEW SOURCE
-        ========================= */
-        if (
-            e.ctrlKey &&
-            key === "u"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép xem mã nguồn trực tiếp!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + S
-           SAVE PAGE
-        ========================= */
-        if (
-            e.ctrlKey &&
-            key === "s"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép lưu trang trực tiếp!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + P
-           IN / SAVE PDF
-        ========================= */
-        if (
-            e.ctrlKey &&
-            key === "p"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Chức năng này đã bị giới hạn!"
-            );
-
-            return false;
-        }
-
+        if (e.key === "F12" || e.keyCode === 123) { e.preventDefault(); e.stopPropagation(); securityWarning("Phím F12 đã bị vô hiệu hóa!"); return false; }
+        if (e.ctrlKey && e.shiftKey && key === "i") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép mở Developer Tools!"); return false; }
+        if (e.ctrlKey && e.shiftKey && key === "j") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép mở Console!"); return false; }
+        if (e.ctrlKey && e.shiftKey && key === "c") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép sử dụng Inspect Element!"); return false; }
+        if (e.ctrlKey && key === "u") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép xem mã nguồn trực tiếp!"); return false; }
+        if (e.ctrlKey && key === "s") { e.preventDefault(); e.stopPropagation(); securityWarning("Không được phép lưu trang trực tiếp!"); return false; }
+        if (e.ctrlKey && key === "p") { e.preventDefault(); e.stopPropagation(); securityWarning("Chức năng này đã bị giới hạn!"); return false; }
     }, true);
 
-
-    /* =========================
-       CHẶN KÉO ẢNH
-    ========================= */
-    document.addEventListener("dragstart", function (e) {
-
-        if (
-            e.target &&
-            e.target.tagName === "IMG"
-        ) {
-            e.preventDefault();
-
-            securityWarning(
-                "Không được phép kéo hoặc sao chép hình ảnh!"
-            );
-
-            return false;
-        }
-
-    }, true);
-
-
-    /* =========================
-       CHẶN DOUBLE CLICK
-       TRÊN ẢNH
-    ========================= */
-    document.addEventListener("dblclick", function (e) {
-
-        if (
-            e.target &&
-            e.target.tagName === "IMG"
-        ) {
-            e.preventDefault();
-        }
-
-    }, true);
-
-
-    /* =========================
-       CHẶN COPY
-    ========================= */
-    document.addEventListener("copy", function (e) {
-
-        // Cho phép copy trong input/textarea
-        const target = e.target;
-
-        if (
-            target &&
-            (
-                target.tagName === "INPUT" ||
-                target.tagName === "TEXTAREA"
-            )
-        ) {
-            return;
-        }
-
-        e.preventDefault();
-
-        securityWarning(
-            "Không được phép sao chép nội dung trang!"
-        );
-
-    }, true);
-
-
-    /* =========================
-       CHẶN CUT
-    ========================= */
-    document.addEventListener("cut", function (e) {
-
-        const target = e.target;
-
-        if (
-            target &&
-            (
-                target.tagName === "INPUT" ||
-                target.tagName === "TEXTAREA"
-            )
-        ) {
-            return;
-        }
-
-        e.preventDefault();
-
-        securityWarning(
-            "Không được phép cắt nội dung trang!"
-        );
-
-    }, true);
-
-
-    /* =========================
-       CHẶN CHỌN TEXT
-       NHƯNG KHÔNG CHẶN INPUT
-    ========================= */
-    document.addEventListener("selectstart", function (e) {
-
-        const target = e.target;
-
-        if (
-            target &&
-            (
-                target.tagName === "INPUT" ||
-                target.tagName === "TEXTAREA" ||
-                target.tagName === "BUTTON"
-            )
-        ) {
-            return;
-        }
-
-        // Không cho bôi đen text trang
-        e.preventDefault();
-
-    }, true);
-
-
-    /* =========================
-       DEVTOOLS DETECTION
-       
-       Đây chỉ là lớp phát hiện phía client,
-       không phải bảo mật tuyệt đối.
-    ========================= */
+    document.addEventListener("dragstart", function (e) { if (e.target && e.target.tagName === "IMG") { e.preventDefault(); securityWarning("Không được phép kéo hoặc sao chép hình ảnh!"); return false; } }, true);
+    document.addEventListener("dblclick", function (e) { if (e.target && e.target.tagName === "IMG") { e.preventDefault(); } }, true);
+    document.addEventListener("copy", function (e) { const target = e.target; if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return; e.preventDefault(); securityWarning("Không được phép sao chép nội dung trang!"); }, true);
+    document.addEventListener("cut", function (e) { const target = e.target; if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return; e.preventDefault(); securityWarning("Không được phép cắt nội dung trang!"); }, true);
+    document.addEventListener("selectstart", function (e) { const target = e.target; if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "BUTTON")) return; e.preventDefault(); }, true);
 
     let devtoolsShown = false;
-
     function detectDevTools() {
-
         const threshold = 160;
-
-        const widthDiff =
-            window.outerWidth - window.innerWidth;
-
-        const heightDiff =
-            window.outerHeight - window.innerHeight;
-
-        if (
-            widthDiff > threshold ||
-            heightDiff > threshold
-        ) {
-
-            if (!devtoolsShown) {
-
-                devtoolsShown = true;
-
-                securityWarning(
-                    "Phát hiện môi trường Developer Tools. Vui lòng đóng công cụ này!"
-                );
-
-            }
-
-        } else {
-
-            devtoolsShown = false;
-
-        }
-
+        const widthDiff = window.outerWidth - window.innerWidth;
+        const heightDiff = window.outerHeight - window.innerHeight;
+        if (widthDiff > threshold || heightDiff > threshold) {
+            if (!devtoolsShown) { devtoolsShown = true; securityWarning("Phát hiện môi trường Developer Tools. Vui lòng đóng công cụ này!"); }
+        } else { devtoolsShown = false; }
     }
-
     setInterval(detectDevTools, 1200);
 
-
-    /* =========================
-       CHẶN MENU CHUỘT PHẢI
-       TRÊN TOÀN BỘ TRANG
-    ========================= */
-    window.oncontextmenu = function () {
-
-        securityWarning(
-            "Chuột phải đã bị vô hiệu hóa!"
-        );
-
-        return false;
-
-    };
-
-
-    /* =========================
-       BẢO VỆ KHI RỜI TRANG
-    ========================= */
-    window.addEventListener("beforeunload", function () {
-        // Không can thiệp nếu trình duyệt tự đóng/tab.
-    });
-
-
-    console.log(
-        "%c🛡️ HOANGKUN SECURITY SYSTEM",
-        "font-size:20px;font-weight:bold;color:#1677ff;"
-    );
-
-    console.log(
-        "%c⚠️ Khu vực này dành cho hệ thống.",
-        "font-size:14px;color:#ef4444;font-weight:bold;"
-    );
-
+    window.oncontextmenu = function () { securityWarning("Chuột phải đã bị vô hiệu hóa!"); return false; };
+    window.addEventListener("beforeunload", function () {});
+    console.log("%c🛡️ HOANGKUN SECURITY SYSTEM", "font-size:20px;font-weight:bold;color:#1677ff;");
+    console.log("%c⚠️ Khu vực này dành cho hệ thống.", "font-size:14px;color:#ef4444;font-weight:bold;");
 })();
 </script>
 </body> 
