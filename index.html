@@ -454,7 +454,7 @@
 
         /* ========================= TABLE ========================= */ 
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; } 
-        table { width: 100%; border-collapse: collapse; min-width: 700px; } 
+        table { width: 100%; border-collapse: collapse; min-width: 850px; } 
         th, td { padding: 13px 20px; text-align: left; border-bottom: 1px solid #f0f3f7; white-space: nowrap; } 
         th { color: #8b97aa; font-size: 9px; text-transform: uppercase; letter-spacing: .5px; } 
         td { font-size: 10px; font-weight: 600; color: #526074; } 
@@ -467,6 +467,35 @@
         .customer-name strong { display: block; font-size: 10px; color: var(--text); } 
         .customer-name span { display: block; margin-top: 2px; color: #a0aabc; font-size: 8px; } 
         
+        /* Chỉnh style cho link */
+        .order-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .order-link a {
+            color: #1677ff;
+            text-decoration: none;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .order-link a:hover { text-decoration: underline; }
+        .btn-copy {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            padding: 4px 6px;
+            font-size: 9px;
+            transition: .2s;
+        }
+        .btn-copy:hover {
+            background: #e2e8f0;
+            color: #1677ff;
+        }
+
         .table-actions { display: flex; gap: 5px; } 
         .table-actions button { 
             width: 28px; height: 28px; border-radius: 7px; background: #f3f6fb; 
@@ -769,6 +798,7 @@
                                 <th>Mã đơn</th> 
                                 <th>Khách hàng</th> 
                                 <th>Dịch vụ</th> 
+                                <th>Link / Kênh</th>
                                 <th>Số lượng</th> 
                                 <th>Xu</th> 
                                 <th>Trạng thái</th> 
@@ -1147,6 +1177,7 @@ db.ref("users").on("value", snapshot => {
                         id: orderData.orderId || orderId,
                         user: name,
                         service: orderData.service || "Dịch vụ",
+                        link: orderData.link || "Không có link",
                         quantity: orderData.quantity || 0,
                         coins: orderData.total || orderData.coins || 0,
                         status: internalStatus,
@@ -1255,10 +1286,18 @@ function renderRecentOrders() {
     `).join(""); 
 } 
 
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast("Đã copy link!");
+    }).catch(err => {
+        console.error('Không thể copy', err);
+    });
+}
+
 function renderOrders() { 
     const table = document.getElementById("orderTable"); 
     if(orders.length === 0) {
-        table.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9aa6b8;padding:20px;">Chưa có đơn hàng nào</td></tr>`;
+        table.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#9aa6b8;padding:20px;">Chưa có đơn hàng nào</td></tr>`;
         updateStats();
         return;
     }
@@ -1267,6 +1306,14 @@ function renderOrders() {
             <td><strong>${escapeHtml(order.id)}</strong></td> 
             <td>${escapeHtml(order.user)}</td> 
             <td>${escapeHtml(order.service)}</td> 
+            <td>
+                <div class="order-link">
+                    <a href="${escapeHtml(order.link)}" target="_blank" title="${escapeHtml(order.link)}">
+                        ${escapeHtml(order.link)}
+                    </a>
+                    <button class="btn-copy" onclick="copyToClipboard('${escapeHtml(order.link)}')"><i class="fa-regular fa-copy"></i></button>
+                </div>
+            </td>
             <td>${order.quantity.toLocaleString('vi-VN')}</td> 
             <td><strong style="color:#1677ff">${order.coins.toLocaleString()}</strong></td> 
             <td>${getStatusHTML(order.status)}</td> 
@@ -1351,6 +1398,7 @@ function viewOrder(index) {
                 <b>Nền tảng:</b> ${escapeHtml(order.platform)}<br>
                 <b>Khách hàng:</b> ${escapeHtml(order.user)}<br>
                 <b>Dịch vụ:</b> ${escapeHtml(order.service)}<br>
+                <b>Link cần buff:</b> <a href="${escapeHtml(order.link)}" target="_blank" style="color:#1677ff; word-break: break-all;">${escapeHtml(order.link)}</a><br>
                 <b>Số lượng:</b> ${order.quantity.toLocaleString('vi-VN')}<br>
                 <b>Số xu đã trừ:</b> <strong style="color: #10b981;">${order.coins.toLocaleString('vi-VN')} xu</strong><br>
                 <b>Trạng thái:</b> ${getStatusHTML(order.status)}
@@ -1536,7 +1584,7 @@ function saveCustomerInfo() {
         xu: coins,
         isLocked: isLocked
     }).then(() => {
-        showToast("Đã lưu thông tin khách hàng");
+        showToast("Đã lưu thông tự khách hàng");
         closeCustomerModal();
     }).catch(err => {
         showToast("Lỗi: " + err.message);
@@ -1720,7 +1768,7 @@ document.getElementById("globalSearch").addEventListener("input", function() {
     ); 
     const table = document.getElementById("orderTable"); 
     if(filtered.length === 0) {
-        table.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9aa6b8;padding:20px;">Không tìm thấy kết quả</td></tr>`;
+        table.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#9aa6b8;padding:20px;">Không tìm thấy kết quả</td></tr>`;
         return;
     }
     table.innerHTML = filtered.map((order, index) => ` 
@@ -1728,6 +1776,14 @@ document.getElementById("globalSearch").addEventListener("input", function() {
             <td><strong>${order.id}</strong></td> 
             <td>${order.user}</td> 
             <td>${order.service}</td> 
+            <td>
+                <div class="order-link">
+                    <a href="${escapeHtml(order.link)}" target="_blank" title="${escapeHtml(order.link)}">
+                        ${escapeHtml(order.link)}
+                    </a>
+                    <button class="btn-copy" onclick="copyToClipboard('${escapeHtml(order.link)}')"><i class="fa-regular fa-copy"></i></button>
+                </div>
+            </td>
             <td>${order.quantity}</td> 
             <td>${order.coins.toLocaleString()} xu</td> 
             <td>${getStatusHTML(order.status)}</td> 
@@ -1924,4 +1980,6 @@ function escapeHTML(str) { return escapeHtml(str); }
 
 </script>
 </body> 
-</html>
+</html> sao cột link / kênh nó lại chui tít sang bên góc phải vậy
+
+There is a file you can reference named "image_49e2cf.png". Refer to this file by its name verbatim.
