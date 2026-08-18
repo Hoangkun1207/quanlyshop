@@ -1542,7 +1542,7 @@ db.ref("users").on("value", snapshot => {
         });
 
         /* =========================
-           LẤY THẺ CÀO KHÁCH GỬI (ĐÃ SỬA ĐƯỜNG DẪN ĐỒNG BỘ)
+           LẤY THẺ CÀO KHÁCH GỬI
         ========================= */
         if (userData.card_deposits) {
             Object.keys(userData.card_deposits).forEach(requestId => {
@@ -1556,7 +1556,7 @@ db.ref("users").on("value", snapshot => {
                     amount: Number(card.amount || card.menhGia || 0),
                     cardCode: card.pin || card.maThe || "Không có",
                     cardSerial: card.serial || card.seri || "Không có",
-                    status: card.status || "Chờ xử lý", // Đồng bộ trạng thái tiếng Việt
+                    status: card.status || "Chờ xử lý",
                     createdAt: Number(card.time || card.createdAt || Date.now())
                 });
             });
@@ -1599,8 +1599,9 @@ db.ref("users").on("value", snapshot => {
         });
     });
 
-    /* Sắp xếp thẻ mới nhất */
+    /* Sắp xếp thẻ & đơn hàng mới nhất */
     newCards.sort((a, b) => b.createdAt - a.createdAt);
+    newOrders.sort((a, b) => b.createdAt - a.createdAt);
     cardRequests = newCards;
     
     // Nếu có đơn mới và không phải lần tải đầu tiên, hiện thông báo
@@ -1756,7 +1757,22 @@ function completeOrder(index) {
 
 function viewOrder(index) { 
     const order = orders[index]; 
-    alert(`Mã đơn: ${order.id}\nKhách: ${order.user}\nDịch vụ: ${order.service}\nSố lượng: ${order.quantity}\nXu: ${order.coins}\nTrạng thái: ${order.status}`); 
+    Swal.fire({
+        title: "Chi tiết đơn hàng",
+        html: `
+            <div style="text-align: left; line-height: 1.8; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
+                <b>Mã đơn:</b> <span style="color: #1677ff;">${escapeHtml(order.id)}</span><br>
+                <b>Khách hàng:</b> ${escapeHtml(order.user)}<br>
+                <b>Dịch vụ:</b> ${escapeHtml(order.service)}<br>
+                <b>Số lượng:</b> ${order.quantity.toLocaleString('vi-VN')}<br>
+                <b>Số xu đã trừ:</b> <strong style="color: #10b981;">${order.coins.toLocaleString('vi-VN')} xu</strong><br>
+                <b>Trạng thái:</b> ${getStatusHTML(order.status)}
+            </div>
+        `,
+        icon: "info",
+        confirmButtonText: "Đóng",
+        confirmButtonColor: "#1677ff"
+    });
 } 
 
 /* ===================================================== 
@@ -1996,7 +2012,7 @@ function submitCoin() {
     const reason = document.getElementById("coinReason").value.trim(); 
     selectedCustomer = document.getElementById("coinUser").value;
 
-    if (!amount || amount <= 0) return showToast("Vui lòng nhập số lượng hợp lệ"); 
+    if (!amount || amount <= 0) return showToast("Vui lòng nhập số xu hợp lệ"); 
 
     const customer = customers[selectedCustomer]; 
     const coinAmount = amount;
@@ -2011,15 +2027,20 @@ function submitCoin() {
         xu: newBalance
     }).then(() => {
         addNotification(
-    "coin",
-    coinMode === "add" ? "Cộng xu" : "Trừ xu",
-    `${customer.name} đã được ${coinMode === "add" ? "cộng" : "trừ"} ${coinAmount.toLocaleString()} xu.`
-);
+            "coin",
+            coinMode === "add" ? "Cộng xu" : "Trừ xu",
+            `${customer.name} đã được ${coinMode === "add" ? "cộng" : "trừ"} ${coinAmount.toLocaleString()} xu.`
+        );
         
         document.getElementById("coinAmount").value = ""; 
         document.getElementById("coinReason").value = ""; 
         closeCoinModal(); 
-        showToast(coinMode === "add" ? "Đã cộng xu thành công" : "Đã trừ xu thành công"); 
+        Swal.fire({
+            icon: "success",
+            title: "Thành công!",
+            text: coinMode === "add" ? `Đã cộng ${coinAmount.toLocaleString()} xu cho ${customer.name}` : `Đã trừ ${coinAmount.toLocaleString()} xu của ${customer.name}`,
+            confirmButtonColor: "#1677ff"
+        });
     }).catch((err) => {
         showToast("Có lỗi xảy ra: " + err.message);
     });
@@ -2120,10 +2141,21 @@ document.getElementById("globalSearch").addEventListener("input", function() {
 }); 
 
 function logout() { 
-    if (confirm("Bạn có chắc muốn đăng xuất khỏi khu quản lý?")) { 
-        localStorage.removeItem("adminLogin"); 
-        window.location.href = "index.html"; 
-    } 
+    Swal.fire({
+        title: "Đăng xuất?",
+        text: "Bạn có chắc muốn đăng xuất khỏi khu quản lý Admin?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#1677ff",
+        cancelButtonColor: "#ef4444",
+        confirmButtonText: "Đăng xuất",
+        cancelButtonText: "Hủy"
+    }).then(result => {
+        if (result.isConfirmed) {
+            localStorage.removeItem("adminLogin"); 
+            window.location.href = "index.html"; 
+        }
+    });
 } 
 
 document.getElementById("coinModal").addEventListener("click", function(event) { 
@@ -2188,7 +2220,7 @@ function renderCards() {
                     </div>
                 </td>
                 <td>
-                    <strong>
+                    <strong style="text-transform: uppercase;">
                         ${escapeHtml(card.cardType)}
                     </strong>
                 </td>
@@ -2257,16 +2289,23 @@ function viewCard(index) {
                 ? "Đã từ chối"
                 : "Chờ duyệt";
 
-    alert(
-        "THÔNG TIN THẺ CÀO\n\n" +
-        "Khách hàng: " + card.user + "\n" +
-        "Email: " + card.email + "\n" +
-        "Nhà mạng: " + card.cardType + "\n" +
-        "Mệnh giá: " + card.amount.toLocaleString("vi-VN") + "đ\n" +
-        "Mã thẻ: " + card.cardCode + "\n" +
-        "Serial: " + card.cardSerial + "\n" +
-        "Trạng thái: " + statusText
-    );
+    Swal.fire({
+        title: "Thông tin thẻ cào",
+        html: `
+            <div style="text-align: left; line-height: 1.8; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
+                <b>Khách hàng:</b> ${escapeHtml(card.user)}<br>
+                <b>Email:</b> ${escapeHtml(card.email)}<br>
+                <b>Nhà mạng:</b> <span style="text-transform: uppercase; font-weight: bold;">${escapeHtml(card.cardType)}</span><br>
+                <b>Mệnh giá:</b> <span style="color: #059669; font-weight: bold;">${card.amount.toLocaleString("vi-VN")}đ</span><br>
+                <b>Mã thẻ:</b> <span style="color: #1677ff; font-weight: bold;">${escapeHtml(card.cardCode)}</span><br>
+                <b>Serial:</b> <span style="color: #526074; font-weight: bold;">${escapeHtml(card.cardSerial)}</span><br>
+                <b>Trạng thái:</b> ${statusText}
+            </div>
+        `,
+        icon: "info",
+        confirmButtonText: "Đóng",
+        confirmButtonColor: "#1677ff"
+    });
 }
 
 function approveCard(index) {
@@ -2274,93 +2313,103 @@ function approveCard(index) {
     if (!card) return;
 
     if (card.status !== "Chờ xử lý" && card.status !== "pending") {
-        showToast("Thẻ này đã được xử lý trước đó.");
+        Swal.fire("Lỗi", "Thẻ này đã được xử lý trước đó.", "warning");
         return;
     }
 
     if (!card.amount || card.amount <= 0) {
-        showToast("Mệnh giá thẻ không hợp lệ.");
+        Swal.fire("Lỗi", "Mệnh giá thẻ không hợp lệ.", "error");
         return;
     }
 
-    const coinReward = Number(card.amount) * 0.8 * 30;
+    const coinReward = Number(card.amount) * 0.8 * 30; // Nạp 10k được 300k xu, trừ 20% phí gạch thẻ
 
-    const confirmApprove = confirm(
-        "Duyệt thẻ này?\n\n" +
-        "Khách: " + card.user + "\n" +
-        "Nhà mạng: " + card.cardType + "\n" +
-        "Mệnh giá: " + card.amount.toLocaleString("vi-VN") + "đ\n\n" +
-        "Hệ thống sẽ cộng " + coinReward.toLocaleString("vi-VN") + " xu cho khách (đã trừ 20% phí)."
-    );
+    Swal.fire({
+        title: "Xác nhận duyệt thẻ?",
+        html: `
+            <div style="text-align: left; line-height: 1.8; font-size: 14px;">
+                <b>Khách hàng:</b> ${escapeHtml(card.user)}<br>
+                <b>Nhà mạng:</b> <span style="text-transform: uppercase;">${escapeHtml(card.cardType)}</span><br>
+                <b>Mệnh giá:</b> ${card.amount.toLocaleString("vi-VN")}đ<br><br>
+                <div style="padding: 10px; background: #eafaf5; border: 1px solid #10b981; border-radius: 8px; color: #047857;">
+                    <b>Hệ thống sẽ cộng:</b> <span style="font-size: 16px;">${coinReward.toLocaleString("vi-VN")} xu</span><br>
+                    <i>(Đã trừ 20% phí gạch thẻ)</i>
+                </div>
+            </div>
+        `,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#10b981",
+        cancelButtonColor: "#64748b",
+        confirmButtonText: "Duyệt & Cộng Xu",
+        cancelButtonText: "Hủy"
+    }).then((result) => {
+        if (result.isConfirmed) {
 
-    if (!confirmApprove) return;
+            const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
 
-    const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
+            cardRef.once("value").then(snapshot => {
+                const currentCard = snapshot.val();
 
-    cardRef.once("value").then(snapshot => {
-        const currentCard = snapshot.val();
+                if (!currentCard) {
+                    Swal.fire("Lỗi", "Không tìm thấy thẻ trong Database.", "error");
+                    return;
+                }
 
-        if (!currentCard) {
-            showToast("Không tìm thấy thẻ trong Database.");
-            return;
-        }
+                if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") {
+                    Swal.fire("Lỗi", "Thẻ này đã được xử lý.", "error");
+                    return;
+                }
 
-        if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") {
-            showToast("Thẻ này đã được xử lý.");
-            return;
-        }
+                const userRef = db.ref("users/" + card.uid);
 
-        const userRef = db.ref("users/" + card.uid);
+                return userRef.once("value").then(userSnapshot => {
+                    const userData = userSnapshot.val() || {};
 
-        return userRef.once("value").then(userSnapshot => {
-            const userData = userSnapshot.val() || {};
+                    const currentCoins = Number(
+                        userData.xu ||
+                        userData.balance ||
+                        userData.coins ||
+                        0
+                    );
 
-            const currentCoins = Number(
-                userData.xu ||
-                userData.balance ||
-                userData.coins ||
-                0
-            );
+                    const newCoins = currentCoins + coinReward;
 
-            const newCoins = currentCoins + coinReward;
+                    return userRef.update({
+                        xu: newCoins,
+                        balance: newCoins,
+                        coins: newCoins
+                    }).then(() => {
+                        // Ghi vào lịch sử để khách dễ theo dõi
+                        db.ref("users/" + card.uid + "/lich_su_hoa_hong").push({
+                            time: Date.now(),
+                            content: "Nạp thẻ cào thành công",
+                            amount: coinReward,
+                            status: "Thành công"
+                        });
 
-            return userRef.update({
-                xu: newCoins,
-                balance: newCoins,
-                coins: newCoins
+                        return cardRef.update({
+                            status: "Thành công",
+                            approvedAt: firebase.database.ServerValue.TIMESTAMP,
+                            approvedBy: "HoangKun Admin"
+                        });
+                    });
+                });
+
             }).then(() => {
-                // Ghi vào lịch sử để khách dễ theo dõi
-                db.ref("users/" + card.uid + "/lich_su_hoa_hong").push({
-                    time: Date.now(),
-                    content: "Nạp thẻ cào thành công",
-                    amount: coinReward,
-                    status: "Thành công"
-                });
+                addNotification(
+                    "coin",
+                    "Đã duyệt thẻ cào",
+                    `${card.user} được cộng ${coinReward.toLocaleString("vi-VN")} xu.`
+                );
 
-                return cardRef.update({
-                    status: "Thành công",
-                    approvedAt: firebase.database.ServerValue.TIMESTAMP,
-                    approvedBy: "HoangKun Admin"
-                });
+                Swal.fire("Thành công!", `Đã duyệt thẻ và cộng ${coinReward.toLocaleString("vi-VN")} xu cho khách hàng.`, "success");
+
+            }).catch(error => {
+                console.error(error);
+                Swal.fire("Lỗi", "Lỗi khi duyệt thẻ: " + error.message, "error");
             });
-        });
-
-    }).then(() => {
-        addNotification(
-            "coin",
-            "Đã duyệt thẻ cào",
-            `${card.user} được cộng ${coinReward.toLocaleString("vi-VN")} xu.`
-        );
-
-        showToast(
-            "Đã duyệt thẻ và cộng " +
-        coinReward.toLocaleString("vi-VN") +
-        " xu"
-        );
-
-    }).catch(error => {
-        console.error(error);
-        showToast("Lỗi khi duyệt thẻ: " + error.message);
+        }
     });
 }
 
@@ -2369,45 +2418,58 @@ function rejectCard(index) {
     if (!card) return;
 
     if (card.status !== "Chờ xử lý" && card.status !== "pending") {
-        showToast("Thẻ này đã được xử lý.");
+        Swal.fire("Lỗi", "Thẻ này đã được xử lý.", "error");
         return;
     }
 
-    const reason = prompt(
-        "Nhập lý do từ chối thẻ:\n\n" +
-        "Ví dụ: Thẻ sai, thẻ đã sử dụng, sai serial..."
-    );
-
-    if (reason === null) return;
-
-    const rejectReason = reason.trim() || "Thẻ không hợp lệ";
-    const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
-
-    cardRef.once("value").then(snapshot => {
-        const currentCard = snapshot.val();
-        if (!currentCard) {
-            showToast("Không tìm thấy thẻ.");
-            return;
+    Swal.fire({
+        title: "Từ chối thẻ cào",
+        input: "text",
+        inputLabel: "Lý do từ chối (VD: Thẻ sai, thẻ đã sử dụng...)",
+        inputPlaceholder: "Nhập lý do từ chối...",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#ef4444",
+        cancelButtonColor: "#64748b",
+        confirmButtonText: "Từ chối",
+        cancelButtonText: "Hủy",
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Vui lòng nhập lý do từ chối!'
+            }
         }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const rejectReason = result.value.trim() || "Thẻ không hợp lệ";
+            const cardRef = db.ref("users/" + card.uid + "/card_deposits/" + card.requestId);
 
-        if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") {
-            showToast("Thẻ này đã được xử lý.");
-            return;
+            cardRef.once("value").then(snapshot => {
+                const currentCard = snapshot.val();
+                if (!currentCard) {
+                    Swal.fire("Lỗi", "Không tìm thấy thẻ.", "error");
+                    return;
+                }
+
+                if (currentCard.status && currentCard.status !== "Chờ xử lý" && currentCard.status !== "pending") {
+                    Swal.fire("Lỗi", "Thẻ này đã được xử lý.", "error");
+                    return;
+                }
+
+                return cardRef.update({
+                    status: "Thất bại",
+                    rejectReason: rejectReason,
+                    rejectedAt: firebase.database.ServerValue.TIMESTAMP,
+                    rejectedBy: "HoangKun Admin"
+                });
+
+            }).then(() => {
+                addNotification("order", "Từ chối thẻ cào", `${card.user}: ${rejectReason}`);
+                Swal.fire("Đã từ chối", "Thẻ cào đã bị từ chối thành công.", "success");
+            }).catch(error => {
+                console.error(error);
+                Swal.fire("Lỗi", "Lỗi khi từ chối thẻ: " + error.message, "error");
+            });
         }
-
-        return cardRef.update({
-            status: "Thất bại",
-            rejectReason: rejectReason,
-            rejectedAt: firebase.database.ServerValue.TIMESTAMP,
-            rejectedBy: "HoangKun Admin"
-        });
-
-    }).then(() => {
-        addNotification("order", "Từ chối thẻ cào", `${card.user}: ${rejectReason}`);
-        showToast("Đã từ chối thẻ cào.");
-    }).catch(error => {
-        console.error(error);
-        showToast("Lỗi khi từ chối thẻ: " + error.message);
     });
 }
 
@@ -2436,452 +2498,6 @@ function escapeHtml(value) {
 }
 function escapeHTML(str) { return escapeHtml(str); }
 
-/* =========================================================
-   HOANGKUN SECURITY SYSTEM
-   CHỐNG F12 / CHUỘT PHẢI / DEVTOOLS / VIEW SOURCE
-   ========================================================= */
-
-(function () {
-
-    let warningCooldown = false;
-
-    /* =========================
-       THÔNG BÁO CẢNH BÁO
-    ========================= */
-    function securityWarning(message = "Thao tác này không được phép!") {
-
-        // Không spam popup liên tục
-        if (warningCooldown) return;
-
-        warningCooldown = true;
-
-        setTimeout(() => {
-            warningCooldown = false;
-        }, 1800);
-
-        if (typeof Swal !== "undefined") {
-
-            Swal.fire({
-                icon: "warning",
-                title: "⚠️ CẢNH BÁO BẢO MẬT",
-                html: `
-                    <div style="
-                        text-align:center;
-                        color:#64748b;
-                        font-size:14px;
-                        line-height:1.7;
-                    ">
-                        <div style="
-                            width:65px;
-                            height:65px;
-                            margin:0 auto 15px;
-                            border-radius:50%;
-                            background:linear-gradient(135deg,#fff7ed,#ffedd5);
-                            display:flex;
-                            align-items:center;
-                            justify-content:center;
-                            font-size:30px;
-                        ">
-                            🔒
-                        </div>
-
-                        <b style="color:#ef4444;font-size:15px;">
-                            ${message}
-                        </b>
-
-                        <p style="margin-top:8px;">
-                            Vui lòng không cố gắng truy cập
-                            công cụ dành cho nhà phát triển.
-                        </p>
-
-                        <div style="
-                            margin-top:14px;
-                            padding:10px 12px;
-                            background:#f8fafc;
-                            border:1px solid #e2e8f0;
-                            border-radius:10px;
-                            font-size:12px;
-                        ">
-                            🛡️ HoangKun Store Security
-                        </div>
-                    </div>
-                `,
-                confirmButtonText: "Đã hiểu",
-                confirmButtonColor: "#1677ff",
-                width: "420px",
-                allowOutsideClick: true,
-                allowEscapeKey: true,
-                backdrop: "rgba(15,23,42,.78)",
-                showClass: {
-                    popup: `
-                        animate__animated
-                        animate__fadeInDown
-                    `
-                }
-            });
-
-        } else {
-            alert("⚠️ CẢNH BÁO BẢO MẬT\n\n" + message);
-        }
-    }
-
-
-    /* =========================
-       CẤM CHUỘT PHẢI
-    ========================= */
-    document.addEventListener("contextmenu", function (e) {
-
-        e.preventDefault();
-
-        securityWarning(
-            "Chuột phải đã bị vô hiệu hóa trên trang này!"
-        );
-
-        return false;
-
-    }, true);
-
-
-    /* =========================
-       CẤM F12
-    ========================= */
-    document.addEventListener("keydown", function (e) {
-
-        const key = e.key.toLowerCase();
-
-        /* F12 */
-        if (e.key === "F12" || e.keyCode === 123) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Phím F12 đã bị vô hiệu hóa!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + SHIFT + I
-           DEVTOOLS
-        ========================= */
-        if (
-            e.ctrlKey &&
-            e.shiftKey &&
-            key === "i"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép mở Developer Tools!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + SHIFT + J
-           CONSOLE
-        ========================= */
-        if (
-            e.ctrlKey &&
-            e.shiftKey &&
-            key === "j"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép mở Console!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + SHIFT + C
-           INSPECT ELEMENT
-        ========================= */
-        if (
-            e.ctrlKey &&
-            e.shiftKey &&
-            key === "c"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép sử dụng Inspect Element!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + U
-           VIEW SOURCE
-        ========================= */
-        if (
-            e.ctrlKey &&
-            key === "u"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép xem mã nguồn trực tiếp!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + S
-           SAVE PAGE
-        ========================= */
-        if (
-            e.ctrlKey &&
-            key === "s"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Không được phép lưu trang trực tiếp!"
-            );
-
-            return false;
-        }
-
-
-        /* =========================
-           CTRL + P
-           IN / SAVE PDF
-        ========================= */
-        if (
-            e.ctrlKey &&
-            key === "p"
-        ) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            securityWarning(
-                "Chức năng này đã bị giới hạn!"
-            );
-
-            return false;
-        }
-
-    }, true);
-
-
-    /* =========================
-       CHẶN KÉO ẢNH
-    ========================= */
-    document.addEventListener("dragstart", function (e) {
-
-        if (
-            e.target &&
-            e.target.tagName === "IMG"
-        ) {
-            e.preventDefault();
-
-            securityWarning(
-                "Không được phép kéo hoặc sao chép hình ảnh!"
-            );
-
-            return false;
-        }
-
-    }, true);
-
-
-    /* =========================
-       CHẶN DOUBLE CLICK
-       TRÊN ẢNH
-    ========================= */
-    document.addEventListener("dblclick", function (e) {
-
-        if (
-            e.target &&
-            e.target.tagName === "IMG"
-        ) {
-            e.preventDefault();
-        }
-
-    }, true);
-
-
-    /* =========================
-       CHẶN COPY
-    ========================= */
-    document.addEventListener("copy", function (e) {
-
-        // Cho phép copy trong input/textarea
-        const target = e.target;
-
-        if (
-            target &&
-            (
-                target.tagName === "INPUT" ||
-                target.tagName === "TEXTAREA"
-            )
-        ) {
-            return;
-        }
-
-        e.preventDefault();
-
-        securityWarning(
-            "Không được phép sao chép nội dung trang!"
-        );
-
-    }, true);
-
-
-    /* =========================
-       CHẶN CUT
-    ========================= */
-    document.addEventListener("cut", function (e) {
-
-        const target = e.target;
-
-        if (
-            target &&
-            (
-                target.tagName === "INPUT" ||
-                target.tagName === "TEXTAREA"
-            )
-        ) {
-            return;
-        }
-
-        e.preventDefault();
-
-        securityWarning(
-            "Không được phép cắt nội dung trang!"
-        );
-
-    }, true);
-
-
-    /* =========================
-       CHẶN CHỌN TEXT
-       NHƯNG KHÔNG CHẶN INPUT
-    ========================= */
-    document.addEventListener("selectstart", function (e) {
-
-        const target = e.target;
-
-        if (
-            target &&
-            (
-                target.tagName === "INPUT" ||
-                target.tagName === "TEXTAREA" ||
-                target.tagName === "BUTTON"
-            )
-        ) {
-            return;
-        }
-
-        // Không cho bôi đen text trang
-        e.preventDefault();
-
-    }, true);
-
-
-    /* =========================
-       DEVTOOLS DETECTION
-       
-       Đây chỉ là lớp phát hiện phía client,
-       không phải bảo mật tuyệt đối.
-    ========================= */
-
-    let devtoolsShown = false;
-
-    function detectDevTools() {
-
-        const threshold = 160;
-
-        const widthDiff =
-            window.outerWidth - window.innerWidth;
-
-        const heightDiff =
-            window.outerHeight - window.innerHeight;
-
-        if (
-            widthDiff > threshold ||
-            heightDiff > threshold
-        ) {
-
-            if (!devtoolsShown) {
-
-                devtoolsShown = true;
-
-                securityWarning(
-                    "Phát hiện môi trường Developer Tools. Vui lòng đóng công cụ này!"
-                );
-
-            }
-
-        } else {
-
-            devtoolsShown = false;
-
-        }
-
-    }
-
-    setInterval(detectDevTools, 1200);
-
-
-    /* =========================
-       CHẶN MENU CHUỘT PHẢI
-       TRÊN TOÀN BỘ TRANG
-    ========================= */
-    window.oncontextmenu = function () {
-
-        securityWarning(
-            "Chuột phải đã bị vô hiệu hóa!"
-        );
-
-        return false;
-
-    };
-
-
-    /* =========================
-       BẢO VỆ KHI RỜI TRANG
-    ========================= */
-    window.addEventListener("beforeunload", function () {
-        // Không can thiệp nếu trình duyệt tự đóng/tab.
-    });
-
-
-    console.log(
-        "%c🛡️ HOANGKUN SECURITY SYSTEM",
-        "font-size:20px;font-weight:bold;color:#1677ff;"
-    );
-
-    console.log(
-        "%c⚠️ Khu vực này dành cho hệ thống.",
-        "font-size:14px;color:#ef4444;font-weight:bold;"
-    );
-
-})();
 </script>
 </body> 
 </html>
