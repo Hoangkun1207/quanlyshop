@@ -763,7 +763,7 @@
                     </div> 
                     <div class="order-list" id="recentOrders"></div> 
                 </div> 
-                
+               
                 <!-- NOTIFICATIONS --> 
                 <div class="card"> 
                     <div class="card-head"> 
@@ -1158,7 +1158,8 @@ db.ref("users").on("value", snapshot => {
             { key: 'facebookOrders', name: 'Facebook' },
             { key: 'instagramOrders', name: 'Instagram' },
             { key: 'tiktokOrders', name: 'TikTok' },
-            { key: 'youtubeOrders', name: 'YouTube' }
+            { key: 'youtubeOrders', name: 'YouTube' },
+            { key: 'dichvuOrders', name: 'Dịch Vụ' }
         ];
 
         platforms.forEach(plat => {
@@ -1178,6 +1179,7 @@ db.ref("users").on("value", snapshot => {
                         user: name,
                         service: orderData.service || "Dịch vụ",
                         link: orderData.link || "Không có link",
+                        extraInfo: orderData.extraInfo || "",
                         quantity: orderData.quantity || 0,
                         coins: orderData.total || orderData.coins || 0,
                         status: internalStatus,
@@ -1275,7 +1277,7 @@ function renderRecentOrders() {
             <div class="order-icon"><i class="fa-solid fa-box"></i></div> 
             <div class="order-info"> 
                 <strong>${escapeHtml(order.id)} · ${escapeHtml(order.user)}</strong> 
-                <span>${escapeHtml(order.service)} · ${order.quantity.toLocaleString('vi-VN')}</span> 
+                <span>${escapeHtml(order.service)}</span> 
             </div> 
             <div>${getStatusHTML(order.status)}</div> 
             <div class="order-price"> 
@@ -1301,7 +1303,9 @@ function renderOrders() {
         updateStats();
         return;
     }
-    table.innerHTML = orders.map((order, index) => ` 
+    table.innerHTML = orders.map((order, index) => {
+        let displayQuantity = order.quantity > 0 ? order.quantity.toLocaleString('vi-VN') : "-";
+        return ` 
         <tr> 
             <td><strong>${escapeHtml(order.id)}</strong></td> 
             <td>${escapeHtml(order.user)}</td> 
@@ -1314,7 +1318,7 @@ function renderOrders() {
                     <button class="btn-copy" onclick="copyToClipboard('${escapeHtml(order.link)}')"><i class="fa-regular fa-copy"></i></button>
                 </div>
             </td>
-            <td>${order.quantity.toLocaleString('vi-VN')}</td> 
+            <td>${displayQuantity}</td> 
             <td><strong style="color:#1677ff">${order.coins.toLocaleString()}</strong></td> 
             <td>${getStatusHTML(order.status)}</td> 
             <td> 
@@ -1326,7 +1330,7 @@ function renderOrders() {
                 </div> 
             </td> 
         </tr> 
-    `).join(""); 
+    `}).join(""); 
     updateStats(); 
 } 
 
@@ -1390,6 +1394,17 @@ function cancelOrder(index) {
 
 function viewOrder(index) { 
     const order = orders[index]; 
+    
+    let quantityDisplay = "";
+    if (order.quantity > 0) {
+        quantityDisplay = `<b>Số lượng:</b> ${order.quantity.toLocaleString('vi-VN')}<br>`;
+    }
+    
+    let extraInfoDisplay = "";
+    if (order.extraInfo && order.extraInfo.trim() !== "") {
+        extraInfoDisplay = `<b>Thông tin thêm:</b> <span style="color:#d97706">${escapeHtml(order.extraInfo)}</span><br>`;
+    }
+
     Swal.fire({
         title: "Chi tiết đơn hàng",
         html: `
@@ -1398,8 +1413,9 @@ function viewOrder(index) {
                 <b>Nền tảng:</b> ${escapeHtml(order.platform)}<br>
                 <b>Khách hàng:</b> ${escapeHtml(order.user)}<br>
                 <b>Dịch vụ:</b> ${escapeHtml(order.service)}<br>
-                <b>Link cần buff:</b> <a href="${escapeHtml(order.link)}" target="_blank" style="color:#1677ff; word-break: break-all;">${escapeHtml(order.link)}</a><br>
-                <b>Số lượng:</b> ${order.quantity.toLocaleString('vi-VN')}<br>
+                <b>Link URL:</b> <a href="${escapeHtml(order.link)}" target="_blank" style="color:#1677ff; word-break: break-all;">${escapeHtml(order.link)}</a><br>
+                ${quantityDisplay}
+                ${extraInfoDisplay}
                 <b>Số xu đã trừ:</b> <strong style="color: #10b981;">${order.coins.toLocaleString('vi-VN')} xu</strong><br>
                 <b>Trạng thái:</b> ${getStatusHTML(order.status)}
             </div>
@@ -1771,7 +1787,9 @@ document.getElementById("globalSearch").addEventListener("input", function() {
         table.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#9aa6b8;padding:20px;">Không tìm thấy kết quả</td></tr>`;
         return;
     }
-    table.innerHTML = filtered.map((order, index) => ` 
+    table.innerHTML = filtered.map((order, index) => {
+        let displayQuantity = order.quantity > 0 ? order.quantity.toLocaleString('vi-VN') : "-";
+        return ` 
         <tr> 
             <td><strong>${order.id}</strong></td> 
             <td>${order.user}</td> 
@@ -1784,12 +1802,12 @@ document.getElementById("globalSearch").addEventListener("input", function() {
                     <button class="btn-copy" onclick="copyToClipboard('${escapeHtml(order.link)}')"><i class="fa-regular fa-copy"></i></button>
                 </div>
             </td>
-            <td>${order.quantity}</td> 
+            <td>${displayQuantity}</td> 
             <td>${order.coins.toLocaleString()} xu</td> 
             <td>${getStatusHTML(order.status)}</td> 
             <td><span style="color:#9aa6b8; font-size:10px;">KQ tìm kiếm</span></td> 
         </tr> 
-    `).join(""); 
+    `}).join(""); 
 }); 
 
 function logout() { 
